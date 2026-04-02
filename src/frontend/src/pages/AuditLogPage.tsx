@@ -117,10 +117,11 @@ export default function AuditLogPage({ onNavigate }: AuditLogPageProps) {
         <div className="text-sm space-y-1">
           <p className="font-medium text-foreground">About the Audit Log</p>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            The audit log was introduced in mid-2025. Admin actions performed
-            before this date are not captured in this log. All subsequent admin
-            actions — adding, removing, or modifying reviews — are recorded here
-            with the responsible admin principal and a mandatory reason.
+            The audit log was introduced on April 3rd, 2026. Admin actions
+            performed before this date are not captured in this log. All
+            subsequent admin actions — adding, removing, or modifying reviews —
+            are recorded here with the responsible admin principal and a
+            mandatory reason.
           </p>
         </div>
       </div>
