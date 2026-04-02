@@ -1,0 +1,441 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark Mode (Default) - Institutional Minimalist */
+    --background: oklch(0.13 0 0); /* #0D0D0D - Deep obsidian */
+    --foreground: oklch(0.92 0 0); /* #E5E5E5 - Off-white text */
+
+    --card: oklch(0.16 0 0); /* #141414 - Slightly elevated */
+    --card-foreground: oklch(0.92 0 0); /* #E5E5E5 */
+
+    --popover: oklch(0.16 0 0); /* #141414 - Deep obsidian background for dropdown */
+    --popover-foreground: oklch(1.0 0 0); /* #FFFFFF - Pure white text for maximum contrast */
+
+    --primary: oklch(0.92 0 0); /* #FFFFFF - Pure white for primary elements */
+    --primary-foreground: oklch(0.13 0 0); /* #0D0D0D */
+
+    --secondary: oklch(0.25 0 0); /* #222222 - Subtle secondary */
+    --secondary-foreground: oklch(0.92 0 0); /* #E5E5E5 */
+
+    --muted: oklch(0.25 0 0); /* #222222 */
+    --muted-foreground: oklch(0.6 0 0); /* #888888 - Muted grey */
+
+    --accent: oklch(0.25 0 0); /* #2A2A2A - Subtle grey fill for hover */
+    --accent-foreground: oklch(1.0 0 0); /* #FFFFFF - Pure white text on hover */
+
+    --destructive: oklch(0.55 0.2 25); /* Red for destructive actions */
+    --destructive-foreground: oklch(0.98 0 0); /* #FAFAFA */
+
+    --border: oklch(0.25 0 0); /* #222222 - Subtle borders */
+    --input: oklch(0.3 0 0); /* #444444 - Input borders */
+    --ring: oklch(0.92 0 0); /* #FFFFFF - Focus rings */
+
+    --radius: 0.5rem;
+
+    /* Recommendation badge colors - Dark Mode */
+    --recommendation-adopt-border: oklch(0.65 0.15 145); /* #22C55E - Green */
+    --recommendation-adopt-text: oklch(0.65 0.15 145);
+    --recommendation-reject-border: oklch(0.6 0.2 25); /* #EF4444 - Red */
+    --recommendation-reject-text: oklch(0.6 0.2 25);
+
+    /* Backend error notification - Dark Mode */
+    --backend-error-bg: oklch(0.2 0.05 25); /* #2A1A1A - Dark red tint */
+    --backend-error-border: oklch(0.6 0.2 25); /* #EF4444 - Red */
+    --backend-error-text: oklch(0.92 0 0); /* #E5E5E5 */
+
+    /* Already stored proposal styling - Dark Mode */
+    --proposal-stored-bg: oklch(0.18 0 0); /* #1A1A1A - Slightly dimmed background */
+    --proposal-stored-text: oklch(0.5 0 0); /* #666666 - Dimmed text */
+    --proposal-stored-opacity: 0.6; /* Reduced opacity for dimmed effect */
+  }
+
+  .light {
+    /* Light Mode - Institutional Minimalist */
+    --background: oklch(1.0 0 0); /* #FFFFFF - Pure white */
+    --foreground: oklch(0.25 0 0); /* #1A1A1A - High-contrast charcoal */
+
+    --card: oklch(1.0 0 0); /* #FFFFFF */
+    --card-foreground: oklch(0.25 0 0); /* #1A1A1A */
+
+    --popover: oklch(1.0 0 0); /* #FFFFFF - White background for dropdown */
+    --popover-foreground: oklch(0.25 0 0); /* #1A1A1A - Charcoal text for maximum contrast */
+
+    --primary: oklch(0.25 0 0); /* #1A1A1A - Dark primary for light mode */
+    --primary-foreground: oklch(1.0 0 0); /* #FFFFFF */
+
+    --secondary: oklch(0.96 0 0); /* #F3F4F6 - Light grey */
+    --secondary-foreground: oklch(0.25 0 0); /* #1A1A1A */
+
+    --muted: oklch(0.96 0 0); /* #F3F4F6 */
+    --muted-foreground: oklch(0.5 0 0); /* #666666 - Muted grey */
+
+    --accent: oklch(0.96 0 0); /* #F3F4F6 - Light grey fill for hover */
+    --accent-foreground: oklch(0.25 0 0); /* #1A1A1A */
+
+    --destructive: oklch(0.55 0.2 25); /* Red */
+    --destructive-foreground: oklch(0.98 0 0); /* #FAFAFA */
+
+    --border: oklch(0.9 0 0); /* #E5E7EB - Light grey borders */
+    --input: oklch(0.9 0 0); /* #E5E7EB */
+    --ring: oklch(0.25 0 0); /* #1A1A1A */
+
+    /* Recommendation badge colors - Light Mode (darker for contrast) */
+    --recommendation-adopt-border: oklch(0.5 0.15 145); /* Darker green */
+    --recommendation-adopt-text: oklch(0.45 0.15 145);
+    --recommendation-reject-border: oklch(0.5 0.2 25); /* Darker red */
+    --recommendation-reject-text: oklch(0.45 0.2 25);
+
+    /* Backend error notification - Light Mode */
+    --backend-error-bg: oklch(0.97 0.02 25); /* #FEF2F2 - Light red tint */
+    --backend-error-border: oklch(0.5 0.2 25); /* #DC2626 - Darker red */
+    --backend-error-text: oklch(0.25 0 0); /* #1A1A1A */
+
+    /* Already stored proposal styling - Light Mode */
+    --proposal-stored-bg: oklch(0.96 0 0); /* #F3F4F6 - Light grey background */
+    --proposal-stored-text: oklch(0.55 0 0); /* #777777 - Dimmed text */
+    --proposal-stored-opacity: 0.6; /* Reduced opacity for dimmed effect */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+  }
+}
+
+/* Backend Error Banner */
+.backend-error-banner {
+  background-color: var(--backend-error-bg);
+  border: 1px solid var(--backend-error-border);
+  color: var(--backend-error-text);
+}
+
+.backend-error-banner svg {
+  color: var(--backend-error-border);
+}
+
+/* Enhanced Table Styling with Zebra Striping */
+.table-row-odd {
+  background-color: oklch(0.14 0 0); /* #111111 in dark mode */
+}
+
+.light .table-row-odd {
+  background-color: oklch(0.98 0 0); /* #FAFAFA in light mode */
+}
+
+.table-row-even {
+  background-color: oklch(0.13 0 0); /* #0D0D0D in dark mode */
+}
+
+.light .table-row-even {
+  background-color: oklch(1.0 0 0); /* #FFFFFF in light mode */
+}
+
+.table-row-hover {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.table-row-hover:hover {
+  background-color: oklch(0.2 0 0) !important; /* #1A1A1A in dark mode */
+}
+
+.light .table-row-hover:hover {
+  background-color: oklch(0.97 0 0) !important; /* #F9FAFB in light mode */
+}
+
+/* Already Stored Proposal Rows - Subtle Dimmed Style with proper theme support */
+.proposal-row-stored {
+  background-color: var(--proposal-stored-bg) !important;
+  opacity: var(--proposal-stored-opacity);
+  cursor: not-allowed;
+}
+
+.proposal-row-stored td {
+  color: var(--proposal-stored-text) !important;
+}
+
+.proposal-row-stored:hover {
+  background-color: var(--proposal-stored-bg) !important;
+}
+
+/* Disable pointer events on checkbox inside stored rows */
+.proposal-row-stored input[type="checkbox"] {
+  cursor: not-allowed;
+}
+
+/* Already Stored Proposal Cards - Mobile View with proper theme support */
+.proposal-card-stored {
+  background-color: var(--proposal-stored-bg) !important;
+  opacity: var(--proposal-stored-opacity);
+  cursor: not-allowed;
+}
+
+.proposal-card-stored * {
+  color: var(--proposal-stored-text) !important;
+}
+
+/* Disable pointer events on checkbox inside stored cards */
+.proposal-card-stored input[type="checkbox"] {
+  cursor: not-allowed;
+}
+
+/* Topic Pills */
+.topic-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background-color: oklch(0.25 0 0); /* #222222 in dark mode */
+  color: oklch(0.92 0 0); /* #E5E5E5 in dark mode */
+  transition: all 0.2s ease;
+}
+
+.light .topic-pill {
+  background-color: oklch(0.96 0 0); /* #F3F4F6 in light mode */
+  color: oklch(0.25 0 0); /* #1A1A1A in light mode */
+}
+
+/* Recommendation Badges - Minimalist Pill Style */
+.recommendation-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  border: 1px solid;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.recommendation-adopt {
+  border-color: var(--recommendation-adopt-border);
+  color: var(--recommendation-adopt-text);
+}
+
+.recommendation-reject {
+  border-color: var(--recommendation-reject-border);
+  color: var(--recommendation-reject-text);
+}
+
+/* Notice Box */
+.notice-box {
+  background-color: oklch(0.14 0 0); /* #111111 in dark mode */
+  border: 1px solid oklch(0.25 0 0); /* #222222 */
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.light .notice-box {
+  background-color: oklch(0.98 0 0); /* #F9FAFB in light mode */
+  border-color: oklch(0.9 0 0); /* #E5E7EB */
+}
+
+/* Topic Filter Dropdown Styling - Enhanced for Institutional Minimalist with Improved Layering */
+.topic-filter-trigger {
+  background-color: oklch(0.16 0 0); /* #141414 - Subtle background fill in dark mode */
+  border: 1px solid oklch(0.25 0 0); /* #222222 - Consistent with proposal card borders */
+  color: oklch(0.92 0 0); /* #E5E5E5 */
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+  padding: 0.5rem 1rem;
+}
+
+.light .topic-filter-trigger {
+  background-color: oklch(1.0 0 0); /* #FFFFFF - White background in light mode */
+  border-color: oklch(0.9 0 0); /* #E5E7EB - Light grey border */
+  color: oklch(0.25 0 0); /* #1A1A1A */
+}
+
+.topic-filter-trigger:hover {
+  border-color: oklch(0.3 0 0); /* #444444 in dark mode */
+}
+
+.light .topic-filter-trigger:hover {
+  border-color: oklch(0.82 0 0); /* #D1D5DB in light mode */
+}
+
+.topic-filter-trigger:focus {
+  outline: none;
+  border-color: oklch(var(--ring));
+  box-shadow: 0 0 0 2px oklch(var(--ring) / 0.2);
+}
+
+/* High-contrast chevron icon */
+.topic-filter-trigger svg {
+  color: oklch(1.0 0 0); /* #FFFFFF - Pure white in dark mode */
+  opacity: 1;
+}
+
+.light .topic-filter-trigger svg {
+  color: oklch(0.25 0 0); /* #1A1A1A - Charcoal in light mode */
+}
+
+/* Topic Filter Dropdown Content - Enhanced with solid border, background, and box-shadow */
+.topic-filter-content {
+  background-color: oklch(0.16 0 0) !important; /* #1A1A1A - Solid deep obsidian in dark mode */
+  border: 1px solid oklch(0.3 0 0) !important; /* #333333 - Solid border in dark mode */
+  border-radius: var(--radius);
+  padding: 0.5rem 0;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important; /* Soft box-shadow for elevation */
+  z-index: 150 !important; /* Higher z-index to float above all headers and table content */
+  min-width: 280px;
+  position: relative;
+}
+
+.light .topic-filter-content {
+  background-color: oklch(1.0 0 0) !important; /* #FFFFFF - Solid white in light mode */
+  border-color: oklch(0.82 0 0) !important; /* #D1D5DB - Solid light grey border */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important; /* Softer shadow for light mode */
+}
+
+/* Topic Filter Dropdown Items - Enhanced contrast, padding, and checkmark visibility */
+.topic-filter-item {
+  padding: 0.75rem 1.5rem; /* Increased horizontal padding for better readability */
+  color: oklch(1.0 0 0); /* #FFFFFF - Pure white text in dark mode */
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.25rem;
+  margin: 0 0.25rem;
+  position: relative;
+}
+
+.light .topic-filter-item {
+  color: oklch(0.25 0 0); /* #1A1A1A - Charcoal text in light mode */
+}
+
+.topic-filter-item:hover,
+.topic-filter-item:focus {
+  background-color: oklch(0.25 0 0); /* #2A2A2A in dark mode */
+  color: oklch(1.0 0 0); /* #FFFFFF - Pure white text on hover */
+  outline: none;
+}
+
+.light .topic-filter-item:hover,
+.light .topic-filter-item:focus {
+  background-color: oklch(0.96 0 0); /* #F3F4F6 in light mode */
+  color: oklch(0.25 0 0); /* #1A1A1A - Charcoal text on hover */
+}
+
+.topic-filter-item[data-state="checked"] {
+  background-color: oklch(0.25 0 0); /* #2A2A2A in dark mode */
+  color: oklch(1.0 0 0); /* #FFFFFF */
+}
+
+.light .topic-filter-item[data-state="checked"] {
+  background-color: oklch(0.96 0 0); /* #F3F4F6 in light mode */
+  color: oklch(0.25 0 0); /* #1A1A1A */
+}
+
+/* High-contrast checkmark for active selection */
+.topic-filter-item[data-state="checked"]::before {
+  content: "✓";
+  position: absolute;
+  left: 0.5rem;
+  color: oklch(1.0 0 0); /* #FFFFFF - Pure white checkmark in dark mode */
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.light .topic-filter-item[data-state="checked"]::before {
+  color: oklch(0.13 0 0); /* #000000 - Pure black checkmark in light mode */
+}
+
+/* Mobile Responsive Tables */
+@media (max-width: 768px) {
+  .mobile-card-table {
+    display: none;
+  }
+
+  .mobile-card-list {
+    display: block;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  /* Adjust topic filter width for mobile */
+  .topic-filter-trigger {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .topic-filter-content {
+    min-width: 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-card-table {
+    display: block;
+  }
+
+  .mobile-card-list {
+    display: none;
+  }
+}
+
+/* Smooth Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: oklch(0.16 0 0);
+}
+
+.light ::-webkit-scrollbar-track {
+  background: oklch(0.96 0 0);
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.3 0 0);
+  border-radius: 4px;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: oklch(0.8 0 0);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.4 0 0);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.7 0 0);
+}
