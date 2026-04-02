@@ -476,6 +476,7 @@ export function useUpdateReviewLink() {
       comment: string;
     }) => {
       if (!actor) throw new Error("Actor not available");
+      // backend.ts only has 3 args (no comment param in current canister version)
       return (actor as any).updateReviewLink(
         params.proposalId,
         params.reviewerPrincipal,
@@ -507,6 +508,7 @@ export function useFixReviewStatus() {
       comment: string;
     }) => {
       if (!actor) throw new Error("Actor not available");
+      // backend.ts only has 2 args (no comment param in current canister version)
       return (actor as any).fixReviewStatus(
         params.proposalId,
         params.reviewerPrincipal,
@@ -540,6 +542,7 @@ export function useAdminAddReview() {
       comment: string;
     }) => {
       if (!actor) throw new Error("Actor not available");
+      // adminAddReview is a newer backend method not yet in the generated backendInterface
       return (actor as any).adminAddReview(
         params.proposalId,
         params.reviewerPrincipal,
@@ -579,6 +582,7 @@ export function useAdminRemoveReview() {
       comment: string;
     }) => {
       if (!actor) throw new Error("Actor not available");
+      // adminRemoveReview is a newer backend method not yet in the generated backendInterface
       return (actor as any).adminRemoveReview(
         params.proposalId,
         params.reviewerPrincipal,
@@ -612,6 +616,7 @@ export function useGetAuditLog(page: number, pageSize: number) {
     queryFn: async () => {
       if (!actor) return [];
       try {
+        // getAuditLog is a newer backend method not yet in the generated backendInterface
         return await (actor as any).getAuditLog(BigInt(page), BigInt(pageSize));
       } catch (error: any) {
         handleBackendError(error);
@@ -630,6 +635,7 @@ export function useGetAuditLogSize() {
     queryFn: async () => {
       if (!actor) return BigInt(0);
       try {
+        // getAuditLogSize is a newer backend method not yet in the generated backendInterface
         return await (actor as any).getAuditLogSize();
       } catch (error: any) {
         handleBackendError(error);

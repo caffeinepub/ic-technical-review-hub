@@ -80,6 +80,23 @@ export interface http_request_result {
   'body' : Uint8Array,
   'headers' : Array<http_header>,
 }
+export type AuditActionType = { 'addReview' : null } |
+  { 'removeReview' : null } |
+  { 'editReviewLink' : null } |
+  { 'fixReviewStatus' : null };
+export interface AuditLogEntry {
+  'id' : bigint,
+  'timestamp' : bigint,
+  'adminPrincipal' : Principal,
+  'actionType' : AuditActionType,
+  'proposalId' : bigint,
+  'proposalTitle' : string,
+  'reviewerPrincipal' : Principal,
+  'reviewerNickname' : string,
+  'comment' : string,
+  'beforeValue' : [] | [string],
+  'afterValue' : [] | [string],
+}
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addAdmin' : ActorMethod<[Principal], undefined>,
@@ -91,6 +108,11 @@ export interface _SERVICE {
     [bigint, string, bigint, bigint, bigint, bigint, bigint],
     undefined
   >,
+  'adminAddReview' : ActorMethod<
+    [bigint, Principal, string, Recommendation, string],
+    undefined
+  >,
+  'adminRemoveReview' : ActorMethod<[bigint, Principal, string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'assignReviewerToTopic' : ActorMethod<
     [Principal, bigint, bigint, bigint],
@@ -98,11 +120,13 @@ export interface _SERVICE {
   >,
   'clearAllProposals' : ActorMethod<[], undefined>,
   'fetchIndividualProposal' : ActorMethod<[bigint], string>,
-  'fixReviewStatus' : ActorMethod<[bigint, Principal], FixReviewStatusResult>,
+  'fixReviewStatus' : ActorMethod<[bigint, Principal, string], FixReviewStatusResult>,
   'getAllAdmins' : ActorMethod<[], Array<Principal>>,
   'getAllProposalIds' : ActorMethod<[], Array<bigint>>,
   'getAllReviewers' : ActorMethod<[], Array<ReviewerWithAssignments>>,
   'getAllTopics' : ActorMethod<[], Array<[bigint, string]>>,
+  'getAuditLog' : ActorMethod<[bigint, bigint], Array<AuditLogEntry>>,
+  'getAuditLogSize' : ActorMethod<[], bigint>,
   'getAuthorizedProposalSubmitter' : ActorMethod<[], [] | [Principal]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
@@ -133,7 +157,7 @@ export interface _SERVICE {
   'setAuthorizedProposalSubmitter' : ActorMethod<[[] | [Principal]], undefined>,
   'submitReview' : ActorMethod<[bigint, string, Recommendation], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
-  'updateReviewLink' : ActorMethod<[bigint, Principal, string], boolean>,
+  'updateReviewLink' : ActorMethod<[bigint, Principal, string, string], boolean>,
   'updateReviewer' : ActorMethod<
     [Principal, string, string],
     AddOrUpdateResult

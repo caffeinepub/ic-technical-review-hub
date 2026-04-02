@@ -96,6 +96,25 @@ export const TransformationOutput = IDL.Record({
   'body' : IDL.Vec(IDL.Nat8),
   'headers' : IDL.Vec(http_header),
 });
+export const AuditActionType = IDL.Variant({
+  'addReview' : IDL.Null,
+  'removeReview' : IDL.Null,
+  'editReviewLink' : IDL.Null,
+  'fixReviewStatus' : IDL.Null,
+});
+export const AuditLogEntry = IDL.Record({
+  'id' : IDL.Nat,
+  'timestamp' : IDL.Int,
+  'adminPrincipal' : IDL.Principal,
+  'actionType' : AuditActionType,
+  'proposalId' : IDL.Nat,
+  'proposalTitle' : IDL.Text,
+  'reviewerPrincipal' : IDL.Principal,
+  'reviewerNickname' : IDL.Text,
+  'comment' : IDL.Text,
+  'beforeValue' : IDL.Opt(IDL.Text),
+  'afterValue' : IDL.Opt(IDL.Text),
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -110,6 +129,16 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'adminAddReview' : IDL.Func(
+      [IDL.Nat, IDL.Principal, IDL.Text, Recommendation, IDL.Text],
+      [],
+      [],
+    ),
+  'adminRemoveReview' : IDL.Func(
+      [IDL.Nat, IDL.Principal, IDL.Text],
+      [],
+      [],
+    ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignReviewerToTopic' : IDL.Func(
       [IDL.Principal, IDL.Nat, IDL.Int, IDL.Int],
@@ -119,7 +148,7 @@ export const idlService = IDL.Service({
   'clearAllProposals' : IDL.Func([], [], []),
   'fetchIndividualProposal' : IDL.Func([IDL.Nat], [IDL.Text], []),
   'fixReviewStatus' : IDL.Func(
-      [IDL.Nat, IDL.Principal],
+      [IDL.Nat, IDL.Principal, IDL.Text],
       [FixReviewStatusResult],
       [],
     ),
@@ -135,6 +164,12 @@ export const idlService = IDL.Service({
       [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Text))],
       ['query'],
     ),
+  'getAuditLog' : IDL.Func(
+      [IDL.Nat, IDL.Nat],
+      [IDL.Vec(AuditLogEntry)],
+      ['query'],
+    ),
+  'getAuditLogSize' : IDL.Func([], [IDL.Nat], ['query']),
   'getAuthorizedProposalSubmitter' : IDL.Func(
       [],
       [IDL.Opt(IDL.Principal)],
@@ -203,7 +238,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'updateReviewLink' : IDL.Func(
-      [IDL.Nat, IDL.Principal, IDL.Text],
+      [IDL.Nat, IDL.Principal, IDL.Text, IDL.Text],
       [IDL.Bool],
       [],
     ),
@@ -302,7 +337,26 @@ export const idlFactory = ({ IDL }) => {
     'body' : IDL.Vec(IDL.Nat8),
     'headers' : IDL.Vec(http_header),
   });
-  
+  const AuditActionType = IDL.Variant({
+    'addReview' : IDL.Null,
+    'removeReview' : IDL.Null,
+    'editReviewLink' : IDL.Null,
+    'fixReviewStatus' : IDL.Null,
+  });
+  const AuditLogEntry = IDL.Record({
+    'id' : IDL.Nat,
+    'timestamp' : IDL.Int,
+    'adminPrincipal' : IDL.Principal,
+    'actionType' : AuditActionType,
+    'proposalId' : IDL.Nat,
+    'proposalTitle' : IDL.Text,
+    'reviewerPrincipal' : IDL.Principal,
+    'reviewerNickname' : IDL.Text,
+    'comment' : IDL.Text,
+    'beforeValue' : IDL.Opt(IDL.Text),
+    'afterValue' : IDL.Opt(IDL.Text),
+  });
+
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addAdmin' : IDL.Func([IDL.Principal], [], []),
@@ -316,6 +370,16 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'adminAddReview' : IDL.Func(
+        [IDL.Nat, IDL.Principal, IDL.Text, Recommendation, IDL.Text],
+        [],
+        [],
+      ),
+    'adminRemoveReview' : IDL.Func(
+        [IDL.Nat, IDL.Principal, IDL.Text],
+        [],
+        [],
+      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignReviewerToTopic' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Int, IDL.Int],
@@ -325,7 +389,7 @@ export const idlFactory = ({ IDL }) => {
     'clearAllProposals' : IDL.Func([], [], []),
     'fetchIndividualProposal' : IDL.Func([IDL.Nat], [IDL.Text], []),
     'fixReviewStatus' : IDL.Func(
-        [IDL.Nat, IDL.Principal],
+        [IDL.Nat, IDL.Principal, IDL.Text],
         [FixReviewStatusResult],
         [],
       ),
@@ -341,6 +405,12 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Text))],
         ['query'],
       ),
+    'getAuditLog' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Vec(AuditLogEntry)],
+        ['query'],
+      ),
+    'getAuditLogSize' : IDL.Func([], [IDL.Nat], ['query']),
     'getAuthorizedProposalSubmitter' : IDL.Func(
         [],
         [IDL.Opt(IDL.Principal)],
@@ -417,7 +487,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'updateReviewLink' : IDL.Func(
-        [IDL.Nat, IDL.Principal, IDL.Text],
+        [IDL.Nat, IDL.Principal, IDL.Text, IDL.Text],
         [IDL.Bool],
         [],
       ),

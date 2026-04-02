@@ -92,26 +92,21 @@ export default function ProposalDetailPage({
   const adminAddReview = useAdminAddReview();
   const adminRemoveReview = useAdminRemoveReview();
 
-  // Submit review form state
   const [reviewLink, setReviewLink] = useState("");
   const [recommendation, setRecommendation] = useState<"adopt" | "reject" | "">(
     "",
   );
 
-  // Edit link dialog state
   const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [editedLink, setEditedLink] = useState("");
   const [editComment, setEditComment] = useState("");
 
-  // Fix status dialog state
   const [fixingReview, setFixingReview] = useState<Review | null>(null);
   const [fixComment, setFixComment] = useState("");
 
-  // Remove review dialog state
   const [removingReview, setRemovingReview] = useState<Review | null>(null);
   const [removeComment, setRemoveComment] = useState("");
 
-  // Admin add review dialog state
   const [addReviewDialogOpen, setAddReviewDialogOpen] = useState(false);
   const [adminReviewerPrincipal, setAdminReviewerPrincipal] = useState("");
   const [adminReviewLink, setAdminReviewLink] = useState("");
@@ -141,17 +136,14 @@ export default function ProposalDetailPage({
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!reviewLink.trim()) {
       toast.error("Please enter a review link");
       return;
     }
-
     if (!recommendation) {
       toast.error("Please select a vote recommendation (Adopt or Reject)");
       return;
     }
-
     try {
       const recommendationEnum =
         recommendation === "adopt"
@@ -177,7 +169,6 @@ export default function ProposalDetailPage({
     }
   };
 
-  // Fix status — now opens a dialog
   const handleOpenFixDialog = (review: Review) => {
     setFixingReview(review);
     setFixComment("");
@@ -200,7 +191,6 @@ export default function ProposalDetailPage({
         reviewerPrincipal: fixingReview.reviewer.principal,
         comment: fixComment.trim(),
       });
-
       if (result === FixReviewStatusResult.fixedReviewStatus) {
         toast.success("Review status corrected successfully");
       } else if (result === FixReviewStatusResult.alreadyCorrect) {
@@ -230,17 +220,14 @@ export default function ProposalDetailPage({
 
   const handleUpdateReviewLink = async () => {
     if (!editingReview) return;
-
     if (!editedLink.trim()) {
       toast.error("Please enter a review link");
       return;
     }
-
     if (!editComment.trim()) {
       toast.error("Please enter a comment explaining this change");
       return;
     }
-
     try {
       await updateReviewLink.mutateAsync({
         proposalId,
@@ -260,7 +247,6 @@ export default function ProposalDetailPage({
     }
   };
 
-  // Remove review
   const handleOpenRemoveDialog = (review: Review) => {
     setRemovingReview(review);
     setRemoveComment("");
@@ -292,7 +278,6 @@ export default function ProposalDetailPage({
     }
   };
 
-  // Admin add review
   const handleOpenAddReviewDialog = () => {
     setAddReviewDialogOpen(true);
     setAdminReviewerPrincipal("");
@@ -328,7 +313,6 @@ export default function ProposalDetailPage({
       );
       return;
     }
-
     try {
       const rec =
         adminRecommendation === "adopt"
@@ -588,7 +572,6 @@ export default function ProposalDetailPage({
                     />
                   </div>
                 )}
-
                 {volunteerReviews.length > 0 && (
                   <div>
                     <div className="flex items-center gap-2 mb-3">
@@ -619,30 +602,32 @@ export default function ProposalDetailPage({
         onOpenChange={(open) => !open && handleCloseEditDialog()}
       >
         <DialogContent
-          className="sm:max-w-[500px] rounded-lg"
+          className="sm:max-w-[500px] rounded-lg bg-[#181818] border border-[#333333]"
           data-ocid="proposal_detail.edit_link.dialog"
         >
           <DialogHeader>
-            <DialogTitle>Edit Review Link</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white">Edit Review Link</DialogTitle>
+            <DialogDescription className="text-[#999999]">
               Update the review link for {editingReview?.reviewer.nickname}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="editLink">Review Link</Label>
+              <Label htmlFor="editLink" className="text-white">
+                Review Link
+              </Label>
               <Input
                 id="editLink"
                 type="url"
                 value={editedLink}
                 onChange={(e) => setEditedLink(e.target.value)}
                 placeholder="https://forum.dfinity.org/..."
-                className="rounded-md transition-all duration-200"
+                className="rounded-md transition-all duration-200 bg-[#1A1A1A] border-[#444444] text-white"
                 data-ocid="proposal_detail.edit_link.input"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="editComment">
+              <Label htmlFor="editComment" className="text-white">
                 Reason for change <span className="text-destructive">*</span>
               </Label>
               <Textarea
@@ -650,7 +635,7 @@ export default function ProposalDetailPage({
                 value={editComment}
                 onChange={(e) => setEditComment(e.target.value)}
                 placeholder="Explain why the review link is being updated..."
-                className="rounded-md transition-all duration-200 min-h-[80px]"
+                className="rounded-md transition-all duration-200 min-h-[80px] bg-[#1A1A1A] border-[#444444] text-white"
                 data-ocid="proposal_detail.edit_link.textarea"
               />
             </div>
@@ -683,12 +668,12 @@ export default function ProposalDetailPage({
         onOpenChange={(open) => !open && handleCloseFixDialog()}
       >
         <DialogContent
-          className="sm:max-w-[500px] rounded-lg"
+          className="sm:max-w-[500px] rounded-lg bg-[#181818] border border-[#333333]"
           data-ocid="proposal_detail.fix_status.dialog"
         >
           <DialogHeader>
-            <DialogTitle>Fix Review Status</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white">Fix Review Status</DialogTitle>
+            <DialogDescription className="text-[#999999]">
               Re-evaluate and correct the paid/voluntary status for{" "}
               {fixingReview?.reviewer.nickname}&apos;s review based on their
               grant assignments.
@@ -696,7 +681,7 @@ export default function ProposalDetailPage({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="fixComment">
+              <Label htmlFor="fixComment" className="text-white">
                 Reason <span className="text-destructive">*</span>
               </Label>
               <Textarea
@@ -704,7 +689,7 @@ export default function ProposalDetailPage({
                 value={fixComment}
                 onChange={(e) => setFixComment(e.target.value)}
                 placeholder="Explain why the review status is being corrected..."
-                className="rounded-md transition-all duration-200 min-h-[80px]"
+                className="rounded-md transition-all duration-200 min-h-[80px] bg-[#1A1A1A] border-[#444444] text-white"
                 data-ocid="proposal_detail.fix_status.textarea"
               />
             </div>
@@ -737,12 +722,12 @@ export default function ProposalDetailPage({
         onOpenChange={(open) => !open && handleCloseRemoveDialog()}
       >
         <DialogContent
-          className="sm:max-w-[500px] rounded-lg"
+          className="sm:max-w-[500px] rounded-lg bg-[#181818] border border-[#333333]"
           data-ocid="proposal_detail.remove_review.dialog"
         >
           <DialogHeader>
-            <DialogTitle>Remove Review</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white">Remove Review</DialogTitle>
+            <DialogDescription className="text-[#999999]">
               You are about to permanently remove the review submitted by{" "}
               <strong>{removingReview?.reviewer.nickname}</strong> for proposal{" "}
               #{proposalId.toString()}. This action cannot be undone.
@@ -750,7 +735,7 @@ export default function ProposalDetailPage({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="removeComment">
+              <Label htmlFor="removeComment" className="text-white">
                 Reason for removal <span className="text-destructive">*</span>
               </Label>
               <Textarea
@@ -758,7 +743,7 @@ export default function ProposalDetailPage({
                 value={removeComment}
                 onChange={(e) => setRemoveComment(e.target.value)}
                 placeholder="Explain why this review is being removed..."
-                className="rounded-md transition-all duration-200 min-h-[80px]"
+                className="rounded-md transition-all duration-200 min-h-[80px] bg-[#1A1A1A] border-[#444444] text-white"
                 data-ocid="proposal_detail.remove_review.textarea"
               />
             </div>
@@ -792,12 +777,14 @@ export default function ProposalDetailPage({
         onOpenChange={(open) => !open && handleCloseAddReviewDialog()}
       >
         <DialogContent
-          className="sm:max-w-[550px] rounded-lg"
+          className="sm:max-w-[550px] rounded-lg bg-[#181818] border border-[#333333]"
           data-ocid="proposal_detail.admin_add_review.dialog"
         >
           <DialogHeader>
-            <DialogTitle>Add Review on Behalf of Reviewer</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white">
+              Add Review on Behalf of Reviewer
+            </DialogTitle>
+            <DialogDescription className="text-[#999999]">
               As an admin you can add a review for any registered reviewer. This
               bypasses the deadline restriction. The action will be recorded in
               the audit log.
@@ -805,7 +792,7 @@ export default function ProposalDetailPage({
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="adminReviewerSelect">
+              <Label htmlFor="adminReviewerSelect" className="text-white">
                 Reviewer <span className="text-destructive">*</span>
               </Label>
               <Select
@@ -814,12 +801,12 @@ export default function ProposalDetailPage({
               >
                 <SelectTrigger
                   id="adminReviewerSelect"
-                  className="rounded-md"
+                  className="rounded-md bg-[#1A1A1A] border-[#444444] text-white"
                   data-ocid="proposal_detail.admin_add_review.select"
                 >
                   <SelectValue placeholder="Select a reviewer..." />
                 </SelectTrigger>
-                <SelectContent className="rounded-md">
+                <SelectContent className="rounded-md bg-[#1A1A1A] border-[#333333]">
                   {allReviewers
                     ?.map((rwa) => rwa.reviewer)
                     .sort((a, b) => a.nickname.localeCompare(b.nickname))
@@ -827,6 +814,7 @@ export default function ProposalDetailPage({
                       <SelectItem
                         key={reviewer.principal.toString()}
                         value={reviewer.principal.toString()}
+                        className="text-white"
                       >
                         {reviewer.nickname}
                       </SelectItem>
@@ -835,7 +823,7 @@ export default function ProposalDetailPage({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="adminReviewLink">
+              <Label htmlFor="adminReviewLink" className="text-white">
                 Review Link <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -844,12 +832,12 @@ export default function ProposalDetailPage({
                 value={adminReviewLink}
                 onChange={(e) => setAdminReviewLink(e.target.value)}
                 placeholder="https://forum.dfinity.org/..."
-                className="rounded-md transition-all duration-200"
+                className="rounded-md transition-all duration-200 bg-[#1A1A1A] border-[#444444] text-white"
                 data-ocid="proposal_detail.admin_add_review.input"
               />
             </div>
             <div className="space-y-3">
-              <Label>
+              <Label className="text-white">
                 Vote Recommendation <span className="text-destructive">*</span>
               </Label>
               <RadioGroup
@@ -862,7 +850,7 @@ export default function ProposalDetailPage({
                   <RadioGroupItem value="adopt" id="adminAdopt" />
                   <Label
                     htmlFor="adminAdopt"
-                    className="font-normal cursor-pointer"
+                    className="font-normal cursor-pointer text-white"
                   >
                     Adopt
                   </Label>
@@ -871,7 +859,7 @@ export default function ProposalDetailPage({
                   <RadioGroupItem value="reject" id="adminReject" />
                   <Label
                     htmlFor="adminReject"
-                    className="font-normal cursor-pointer"
+                    className="font-normal cursor-pointer text-white"
                   >
                     Reject
                   </Label>
@@ -879,7 +867,7 @@ export default function ProposalDetailPage({
               </RadioGroup>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="adminAddComment">
+              <Label htmlFor="adminAddComment" className="text-white">
                 Reason / Comment <span className="text-destructive">*</span>
               </Label>
               <Textarea
@@ -887,7 +875,7 @@ export default function ProposalDetailPage({
                 value={adminComment}
                 onChange={(e) => setAdminComment(e.target.value)}
                 placeholder="Explain why you are adding this review on behalf of the reviewer..."
-                className="rounded-md transition-all duration-200 min-h-[80px]"
+                className="rounded-md transition-all duration-200 min-h-[80px] bg-[#1A1A1A] border-[#444444] text-white"
                 data-ocid="proposal_detail.admin_add_review.textarea"
               />
             </div>
