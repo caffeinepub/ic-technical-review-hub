@@ -143,7 +143,8 @@ export default function AuditLogPage({ onNavigate }: AuditLogPageProps) {
               className="text-center py-12 text-muted-foreground"
               data-ocid="audit_log.error_state"
             >
-              Failed to load audit log. Please try refreshing the page.
+              Failed to load audit log. Check the browser console for details,
+              then try refreshing the page.
             </div>
           ) : !entries || entries.length === 0 ? (
             <div

@@ -610,7 +610,7 @@ export function useGetAuditLog(page: number, pageSize: number) {
   return useQuery<AuditLogEntry[]>({
     queryKey: ["auditLog", page.toString(), pageSize.toString()],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
         const result = await actor.getAuditLog(BigInt(page), BigInt(pageSize));
         return result ?? [];
@@ -632,7 +632,7 @@ export function useGetAuditLogSize() {
   return useQuery<bigint>({
     queryKey: ["auditLogSize"],
     queryFn: async () => {
-      if (!actor) return BigInt(0);
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getAuditLogSize();
       } catch (error: any) {

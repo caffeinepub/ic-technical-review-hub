@@ -854,15 +854,12 @@ export class Backend implements backendInterface {
         } else {
             raw = await this.actor.getAuditLog(arg0, arg1);
         }
-        const entries: AuditLogEntry[] = [];
-        for (const e of (raw || [])) {
-            try {
-                entries.push(from_candid_AuditLogEntry(e));
-            } catch (mappingErr) {
-                console.error("[AuditLog] Failed to map entry:", mappingErr, "raw entry:", e);
-            }
+        try {
+            return (raw || []).map((e: any) => from_candid_AuditLogEntry(e));
+        } catch (mappingErr) {
+            console.error("[AuditLog] Mapping failed. Raw entries:", JSON.stringify(raw, (_, v) => typeof v === 'bigint' ? v.toString() : v));
+            throw mappingErr;
         }
-        return entries;
     }
     async getAuditLogSize(): Promise<bigint> {
         if (this.processError) {
@@ -1096,19 +1093,21 @@ function from_candid_AuditLogEntry(value: any): AuditLogEntry {
         if (Array.isArray(v)) return v.length === 0 ? null : String(v[0]);
         return String(v);
     };
-    const actionType = value.actionType != null ? from_candid_AuditActionType(value.actionType) : AuditActionType.addReview;
+    const safeActionType = (() => {
+        try { return from_candid_AuditActionType(value?.actionType); } catch { return AuditActionType.addReview; }
+    })();
     return {
-        id: value.id ?? BigInt(0),
-        timestamp: value.timestamp ?? BigInt(0),
-        adminPrincipal: value.adminPrincipal,
-        actionType,
-        proposalId: value.proposalId ?? BigInt(0),
-        proposalTitle: value.proposalTitle ?? "",
-        reviewerPrincipal: value.reviewerPrincipal,
-        reviewerNickname: value.reviewerNickname ?? "",
-        comment: value.comment ?? "",
-        beforeValue: toOpt(value.beforeValue),
-        afterValue: toOpt(value.afterValue),
+        id: value?.id ?? BigInt(0),
+        timestamp: value?.timestamp ?? BigInt(0),
+        adminPrincipal: value?.adminPrincipal ?? { toString: () => "unknown", toText: () => "unknown" },
+        actionType: safeActionType,
+        proposalId: value?.proposalId ?? BigInt(0),
+        proposalTitle: value?.proposalTitle ?? "",
+        reviewerPrincipal: value?.reviewerPrincipal ?? { toString: () => "unknown", toText: () => "unknown" },
+        reviewerNickname: value?.reviewerNickname ?? "",
+        comment: value?.comment ?? "",
+        beforeValue: toOpt(value?.beforeValue),
+        afterValue: toOpt(value?.afterValue),
     };
 }
 export interface CreateActorOptions {
