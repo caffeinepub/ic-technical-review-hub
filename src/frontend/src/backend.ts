@@ -9,6 +9,7 @@
 import { Actor, HttpAgent, type HttpAgentOptions, type ActorConfig, type Agent, type ActorSubclass } from "@icp-sdk/core/agent";
 import type { Principal } from "@icp-sdk/core/principal";
 import { idlFactory, type _SERVICE } from "./declarations/backend.did";
+import type { AuditLogEntry, AuditActionType } from "./lib/auditTypes";
 export interface Some<T> {
     __kind__: "Some";
     value: T;
@@ -181,6 +182,7 @@ export enum Variant_paid_volunteer {
     paid = "paid",
     volunteer = "volunteer"
 }
+
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     addAdmin(principal: Principal): Promise<void>;
@@ -190,7 +192,11 @@ export interface backendInterface {
     assignReviewerToTopic(reviewer: Principal, topic: bigint, startDate: bigint, endDate: bigint): Promise<void>;
     clearAllProposals(): Promise<void>;
     fetchIndividualProposal(proposalId: bigint): Promise<string>;
-    fixReviewStatus(proposalId: bigint, reviewerPrincipal: Principal): Promise<FixReviewStatusResult>;
+    adminAddReview(proposalId: bigint, reviewerPrincipal: Principal, reviewLink: string, recommendation: Recommendation, comment: string): Promise<void>;
+    adminRemoveReview(proposalId: bigint, reviewerPrincipal: Principal, comment: string): Promise<void>;
+    fixReviewStatus(proposalId: bigint, reviewerPrincipal: Principal, comment: string): Promise<FixReviewStatusResult>;
+    getAuditLog(page: bigint, pageSize: bigint): Promise<Array<AuditLogEntry>>;
+    getAuditLogSize(): Promise<bigint>;
     getAllAdmins(): Promise<Array<Principal>>;
     getAllProposalIds(): Promise<Array<bigint>>;
     getAllReviewers(): Promise<Array<ReviewerWithAssignments>>;
@@ -222,7 +228,7 @@ export interface backendInterface {
     setAuthorizedProposalSubmitter(principal: Principal | null): Promise<void>;
     submitReview(proposalId: bigint, reviewLink: string, recommendation: Recommendation): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
-    updateReviewLink(proposalId: bigint, reviewerPrincipal: Principal, newLink: string): Promise<boolean>;
+    updateReviewLink(proposalId: bigint, reviewerPrincipal: Principal, newLink: string, comment: string): Promise<boolean>;
     updateReviewer(principal: Principal, nickname: string, forumProfileUrl: string): Promise<AddOrUpdateResult>;
 }
 import type { AddOrUpdateResult as _AddOrUpdateResult, FixReviewStatusResult as _FixReviewStatusResult, Proposal as _Proposal, Recommendation as _Recommendation, Review as _Review, Reviewer as _Reviewer, ReviewerAssignment as _ReviewerAssignment, ReviewerDetail as _ReviewerDetail, ReviewerStatus as _ReviewerStatus, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
@@ -340,17 +346,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async fixReviewStatus(arg0: bigint, arg1: Principal): Promise<FixReviewStatusResult> {
+    async fixReviewStatus(arg0: bigint, arg1: Principal, arg2: string): Promise<FixReviewStatusResult> {
         if (this.processError) {
             try {
-                const result = await this.actor.fixReviewStatus(arg0, arg1);
+                const result = await this.actor.fixReviewStatus(arg0, arg1, arg2);
                 return from_candid_FixReviewStatusResult_n5(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.fixReviewStatus(arg0, arg1);
+            const result = await this.actor.fixReviewStatus(arg0, arg1, arg2);
             return from_candid_FixReviewStatusResult_n5(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -794,17 +800,81 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateReviewLink(arg0: bigint, arg1: Principal, arg2: string): Promise<boolean> {
+    async updateReviewLink(arg0: bigint, arg1: Principal, arg2: string, arg3: string): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateReviewLink(arg0, arg1, arg2);
+                const result = await this.actor.updateReviewLink(arg0, arg1, arg2, arg3);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateReviewLink(arg0, arg1, arg2);
+            const result = await this.actor.updateReviewLink(arg0, arg1, arg2, arg3);
+            return result;
+        }
+    }
+    async adminAddReview(arg0: bigint, arg1: Principal, arg2: string, arg3: Recommendation, arg4: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.adminAddReview(arg0, arg1, arg2, to_candid_Recommendation_n26(this._uploadFile, this._downloadFile, arg3), arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.adminAddReview(arg0, arg1, arg2, to_candid_Recommendation_n26(this._uploadFile, this._downloadFile, arg3), arg4);
+            return result;
+        }
+    }
+    async adminRemoveReview(arg0: bigint, arg1: Principal, arg2: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.adminRemoveReview(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.adminRemoveReview(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async getAuditLog(arg0: bigint, arg1: bigint): Promise<Array<AuditLogEntry>> {
+        let raw: any[];
+        if (this.processError) {
+            try {
+                raw = await this.actor.getAuditLog(arg0, arg1);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            raw = await this.actor.getAuditLog(arg0, arg1);
+        }
+        const entries: AuditLogEntry[] = [];
+        for (const e of (raw || [])) {
+            try {
+                entries.push(from_candid_AuditLogEntry(e));
+            } catch (mappingErr) {
+                console.error("[AuditLog] Failed to map entry:", mappingErr, "raw entry:", e);
+            }
+        }
+        return entries;
+    }
+    async getAuditLogSize(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAuditLogSize();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAuditLogSize();
             return result;
         }
     }
@@ -1011,6 +1081,35 @@ function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     } : value == UserRole.guest ? {
         guest: null
     } : value;
+}
+function from_candid_AuditActionType(value: any): AuditActionType {
+    if (value == null || typeof value !== "object") return AuditActionType.addReview;
+    return "addReview" in value ? AuditActionType.addReview :
+           "removeReview" in value ? AuditActionType.removeReview :
+           "editReviewLink" in value ? AuditActionType.editReviewLink :
+           "fixReviewStatus" in value ? AuditActionType.fixReviewStatus :
+           AuditActionType.addReview;
+}
+function from_candid_AuditLogEntry(value: any): AuditLogEntry {
+    const toOpt = (v: any): string | null => {
+        if (v == null) return null;
+        if (Array.isArray(v)) return v.length === 0 ? null : String(v[0]);
+        return String(v);
+    };
+    const actionType = value.actionType != null ? from_candid_AuditActionType(value.actionType) : AuditActionType.addReview;
+    return {
+        id: value.id ?? BigInt(0),
+        timestamp: value.timestamp ?? BigInt(0),
+        adminPrincipal: value.adminPrincipal,
+        actionType,
+        proposalId: value.proposalId ?? BigInt(0),
+        proposalTitle: value.proposalTitle ?? "",
+        reviewerPrincipal: value.reviewerPrincipal,
+        reviewerNickname: value.reviewerNickname ?? "",
+        comment: value.comment ?? "",
+        beforeValue: toOpt(value.beforeValue),
+        afterValue: toOpt(value.afterValue),
+    };
 }
 export interface CreateActorOptions {
     agent?: Agent;

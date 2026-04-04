@@ -98,7 +98,7 @@ interface AuditLogPageProps {
 export default function AuditLogPage({ onNavigate }: AuditLogPageProps) {
   const [page, setPage] = useState(0);
 
-  const { data: entries, isLoading } = useGetAuditLog(page, PAGE_SIZE);
+  const { data: entries, isLoading, isError } = useGetAuditLog(page, PAGE_SIZE);
   const { data: totalSize } = useGetAuditLogSize();
 
   const totalPages = totalSize ? Math.ceil(Number(totalSize) / PAGE_SIZE) : 0;
@@ -137,6 +137,13 @@ export default function AuditLogPage({ onNavigate }: AuditLogPageProps) {
                 // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
                 <Skeleton key={i} className="h-14 w-full rounded-md" />
               ))}
+            </div>
+          ) : isError ? (
+            <div
+              className="text-center py-12 text-muted-foreground"
+              data-ocid="audit_log.error_state"
+            >
+              Failed to load audit log. Please try refreshing the page.
             </div>
           ) : !entries || entries.length === 0 ? (
             <div
