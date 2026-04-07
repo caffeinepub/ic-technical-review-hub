@@ -196,7 +196,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
                 disabled={isLoggingIn}
                 variant={isAuthenticated ? "outline" : "default"}
                 size="sm"
-                className="transition-all duration-200 rounded-md"
+                className="hidden md:inline-flex transition-all duration-200 rounded-md"
                 data-ocid="header.auth.button"
               >
                 {isLoggingIn
@@ -305,6 +305,27 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
                   </button>
                 </div>
               )}
+
+              {/* Auth section at bottom of mobile menu */}
+              <div className="mt-1 pt-2 border-t border-border">
+                <Button
+                  onClick={() => {
+                    handleAuth();
+                    setMobileMenuOpen(false);
+                  }}
+                  disabled={isLoggingIn}
+                  variant={isAuthenticated ? "outline" : "default"}
+                  size="sm"
+                  className="w-full transition-all duration-200 rounded-md"
+                  data-ocid="header.mobile_auth.button"
+                >
+                  {isLoggingIn
+                    ? "Logging in..."
+                    : isAuthenticated
+                      ? "Logout"
+                      : "Login"}
+                </Button>
+              </div>
             </nav>
             {/* Bottom padding */}
             <div className="h-2" />
