@@ -247,7 +247,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
         {mobileMenuOpen && (
           <div
             id="mobile-nav-menu"
-            className="md:hidden border-t border-border bg-card"
+            className="md:hidden border-t border-border bg-white dark:bg-[#141414] relative z-[60]"
             data-ocid="header.mobile_nav.menu"
           >
             <nav className="max-w-7xl mx-auto px-4 py-2 flex flex-col gap-1">
