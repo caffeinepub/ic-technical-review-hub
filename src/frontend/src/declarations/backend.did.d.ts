@@ -14,6 +14,23 @@ export type AddOrUpdateResult = { 'updateError' : null } |
   { 'duplicateError' : null } |
   { 'success' : null } |
   { 'notFoundError' : null };
+export type AuditActionType = { 'fixReviewStatus' : null } |
+  { 'removeReview' : null } |
+  { 'editReviewLink' : null } |
+  { 'addReview' : null };
+export interface AuditLogEntry {
+  'id' : bigint,
+  'adminPrincipal' : Principal,
+  'actionType' : AuditActionType,
+  'reviewerNickname' : string,
+  'comment' : string,
+  'proposalTitle' : string,
+  'afterValue' : [] | [string],
+  'timestamp' : bigint,
+  'reviewerPrincipal' : Principal,
+  'beforeValue' : [] | [string],
+  'proposalId' : bigint,
+}
 export type FixReviewStatusResult = { 'invalidProposal' : null } |
   { 'invalidReviewer' : null } |
   { 'alreadyCorrect' : null } |
@@ -80,25 +97,8 @@ export interface http_request_result {
   'body' : Uint8Array,
   'headers' : Array<http_header>,
 }
-export type AuditActionType = { 'addReview' : null } |
-  { 'removeReview' : null } |
-  { 'editReviewLink' : null } |
-  { 'fixReviewStatus' : null };
-export interface AuditLogEntry {
-  'id' : bigint,
-  'timestamp' : bigint,
-  'adminPrincipal' : Principal,
-  'actionType' : AuditActionType,
-  'proposalId' : bigint,
-  'proposalTitle' : string,
-  'reviewerPrincipal' : Principal,
-  'reviewerNickname' : string,
-  'comment' : string,
-  'beforeValue' : [] | [string],
-  'afterValue' : [] | [string],
-}
 export interface _SERVICE {
-  '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  '_initializeAccessControl' : ActorMethod<[], undefined>,
   'addAdmin' : ActorMethod<[Principal], undefined>,
   'addOrUpdateReviewer' : ActorMethod<
     [Principal, string, string],
@@ -120,7 +120,10 @@ export interface _SERVICE {
   >,
   'clearAllProposals' : ActorMethod<[], undefined>,
   'fetchIndividualProposal' : ActorMethod<[bigint], string>,
-  'fixReviewStatus' : ActorMethod<[bigint, Principal, string], FixReviewStatusResult>,
+  'fixReviewStatus' : ActorMethod<
+    [bigint, Principal, string],
+    FixReviewStatusResult
+  >,
   'getAllAdmins' : ActorMethod<[], Array<Principal>>,
   'getAllProposalIds' : ActorMethod<[], Array<bigint>>,
   'getAllReviewers' : ActorMethod<[], Array<ReviewerWithAssignments>>,
@@ -157,7 +160,10 @@ export interface _SERVICE {
   'setAuthorizedProposalSubmitter' : ActorMethod<[[] | [Principal]], undefined>,
   'submitReview' : ActorMethod<[bigint, string, Recommendation], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
-  'updateReviewLink' : ActorMethod<[bigint, Principal, string, string], boolean>,
+  'updateReviewLink' : ActorMethod<
+    [bigint, Principal, string, string],
+    boolean
+  >,
   'updateReviewer' : ActorMethod<
     [Principal, string, string],
     AddOrUpdateResult

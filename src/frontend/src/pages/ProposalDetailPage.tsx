@@ -51,8 +51,6 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Page } from "../App";
-import { FixReviewStatusResult, Recommendation } from "../backend";
-import type { Review } from "../backend";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
   useAdminAddReview,
@@ -67,6 +65,8 @@ import {
   useUpdateReviewLink,
 } from "../hooks/useQueries";
 import { formatDateTime, isInitialDeadlinePassed } from "../lib/dateUtils";
+import { FixReviewStatusResult, Recommendation } from "../lib/domainTypes";
+import type { Review } from "../lib/domainTypes";
 import { topicIdToDisplayName } from "../lib/topicUtils";
 
 interface ProposalDetailPageProps {

@@ -8,9 +8,9 @@ import Principal "mo:core/Principal";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import Order "mo:core/Order";
-import OutCall "http-outcalls/outcall";
-import MixinAuthorization "authorization/MixinAuthorization";
-import AccessControl "authorization/access-control";
+import OutCall "mo:caffeineai-http-outcalls/outcall";
+import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
+import AccessControl "mo:caffeineai-authorization/access-control";
 
 
 

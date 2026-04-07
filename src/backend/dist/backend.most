@@ -1,0 +1,105 @@
+// Version: 1.0.0
+type AuditActionType__386032791 =
+  {#addReview; #editReviewLink; #fixReviewStatus; #removeReview};
+type AuditLogEntry__32156946 =
+  {
+    actionType : AuditActionType__386032791;
+    adminPrincipal : Principal;
+    afterValue : ?Text;
+    beforeValue : ?Text;
+    comment : Text;
+    id : Nat;
+    proposalId : Nat;
+    proposalTitle : Text;
+    reviewerNickname : Text;
+    reviewerPrincipal : Principal;
+    timestamp : Int
+  };
+type Data__159895909<T> = {var count : Nat__490723111; elements : [var ?T]};
+type Data__791452850<K, V> =
+  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type Internal__667636161<T> =
+  {children : [var ?Node__92254746<T>]; data : Data__159895909<T>};
+type Internal__8484328<K, V> =
+  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type Leaf__520550824<T> = {data : Data__159895909<T>};
+type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type Map__158565046<K, V> = Map__297112838<K, V>;
+type Map__297112838<K, V> =
+  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Map__605269027<K, V> = Map__158565046<K, V>;
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Node__46230540<K, V> =
+  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type Node__92254746<T> =
+  {#internal : Internal__667636161<T>; #leaf : Leaf__520550824<T>};
+type Proposal__521768281 =
+  {
+    creationDate : Int;
+    deadline : Int;
+    deadlineDate : Int;
+    proposalId : Nat;
+    timestamp : Int;
+    title : Text;
+    topic : Nat
+  };
+type Recommendation__945346922 = {#adopt; #reject};
+type Review__422344017 =
+  {
+    link : Text;
+    proposalId : Nat;
+    recommendation : Recommendation__945346922;
+    reviewer : Reviewer__332483002;
+    status : {#paid; #volunteer};
+    timestamp : Int;
+    topic : Nat
+  };
+type ReviewerAssignment__718197073 = {endDate : Int; startDate : Int};
+type Reviewer__332483002 =
+  {forumProfileUrl : Text; nickname : Text; principal : Principal};
+type UserProfile__491224006 = {forumProfileUrl : Text; nickname : Text};
+type UserRole__1054455867 = {#admin; #guest; #user};
+actor {
+  stable accessControlState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__605269027<Principal, UserRole__1054455867>
+    };
+  stable admins :
+    {var root : Node__92254746<Principal>; var size : Nat__490723111};
+  stable auditLog :
+    {
+      var root : Node__46230540<Nat, AuditLogEntry__32156946>;
+      var size : Nat__490723111
+    };
+  stable var auditLogCounter : Nat;
+  stable var authorizedProposalSubmitter : ?Principal;
+  stable proposals :
+    {
+      var root : Node__46230540<Nat, Proposal__521768281>;
+      var size : Nat__490723111
+    };
+  stable reviewerAssignments :
+    {
+      var root :
+        Node__46230540<Principal,
+                        Map__605269027<Nat, ReviewerAssignment__718197073>>;
+      var size : Nat__490723111
+    };
+  stable reviewers :
+    {
+      var root : Node__46230540<Principal, Reviewer__332483002>;
+      var size : Nat__490723111
+    };
+  stable reviews :
+    {
+      var root : Node__46230540<Nat, [Review__422344017]>;
+      var size : Nat__490723111
+    };
+  stable userProfiles :
+    {
+      var root : Node__46230540<Principal, UserProfile__491224006>;
+      var size : Nat__490723111
+    }
+};

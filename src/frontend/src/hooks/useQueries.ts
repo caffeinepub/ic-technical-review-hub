@@ -1,5 +1,6 @@
 import type { Principal } from "@dfinity/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AuditLogEntry } from "../lib/auditTypes";
 import type {
   AddOrUpdateResult,
   FixReviewStatusResult,
@@ -11,8 +12,7 @@ import type {
   ReviewerWithAssignments,
   UserProfile,
   UserRole,
-} from "../backend";
-import type { AuditLogEntry } from "../lib/auditTypes";
+} from "../lib/domainTypes";
 import { useActor } from "./useActor";
 import { useInternetIdentity } from "./useInternetIdentity";
 

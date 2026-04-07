@@ -14,6 +14,10 @@ export const AddOrUpdateResult = IDL.Variant({
   'success' : IDL.Null,
   'notFoundError' : IDL.Null,
 });
+export const Recommendation = IDL.Variant({
+  'reject' : IDL.Null,
+  'adopt' : IDL.Null,
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -38,6 +42,25 @@ export const ReviewerWithAssignments = IDL.Record({
   'assignments' : IDL.Vec(IDL.Tuple(IDL.Nat, ReviewerAssignment)),
   'reviewer' : Reviewer,
 });
+export const AuditActionType = IDL.Variant({
+  'fixReviewStatus' : IDL.Null,
+  'removeReview' : IDL.Null,
+  'editReviewLink' : IDL.Null,
+  'addReview' : IDL.Null,
+});
+export const AuditLogEntry = IDL.Record({
+  'id' : IDL.Nat,
+  'adminPrincipal' : IDL.Principal,
+  'actionType' : AuditActionType,
+  'reviewerNickname' : IDL.Text,
+  'comment' : IDL.Text,
+  'proposalTitle' : IDL.Text,
+  'afterValue' : IDL.Opt(IDL.Text),
+  'timestamp' : IDL.Int,
+  'reviewerPrincipal' : IDL.Principal,
+  'beforeValue' : IDL.Opt(IDL.Text),
+  'proposalId' : IDL.Nat,
+});
 export const UserProfile = IDL.Record({
   'nickname' : IDL.Text,
   'forumProfileUrl' : IDL.Text,
@@ -50,10 +73,6 @@ export const Proposal = IDL.Record({
   'creationDate' : IDL.Int,
   'timestamp' : IDL.Int,
   'proposalId' : IDL.Nat,
-});
-export const Recommendation = IDL.Variant({
-  'reject' : IDL.Null,
-  'adopt' : IDL.Null,
 });
 export const Review = IDL.Record({
   'status' : IDL.Variant({ 'paid' : IDL.Null, 'volunteer' : IDL.Null }),
@@ -96,28 +115,9 @@ export const TransformationOutput = IDL.Record({
   'body' : IDL.Vec(IDL.Nat8),
   'headers' : IDL.Vec(http_header),
 });
-export const AuditActionType = IDL.Variant({
-  'addReview' : IDL.Null,
-  'removeReview' : IDL.Null,
-  'editReviewLink' : IDL.Null,
-  'fixReviewStatus' : IDL.Null,
-});
-export const AuditLogEntry = IDL.Record({
-  'id' : IDL.Nat,
-  'timestamp' : IDL.Int,
-  'adminPrincipal' : IDL.Principal,
-  'actionType' : AuditActionType,
-  'proposalId' : IDL.Nat,
-  'proposalTitle' : IDL.Text,
-  'reviewerPrincipal' : IDL.Principal,
-  'reviewerNickname' : IDL.Text,
-  'comment' : IDL.Text,
-  'beforeValue' : IDL.Opt(IDL.Text),
-  'afterValue' : IDL.Opt(IDL.Text),
-});
 
 export const idlService = IDL.Service({
-  '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  '_initializeAccessControl' : IDL.Func([], [], []),
   'addAdmin' : IDL.Func([IDL.Principal], [], []),
   'addOrUpdateReviewer' : IDL.Func(
       [IDL.Principal, IDL.Text, IDL.Text],
@@ -134,11 +134,7 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
-  'adminRemoveReview' : IDL.Func(
-      [IDL.Nat, IDL.Principal, IDL.Text],
-      [],
-      [],
-    ),
+  'adminRemoveReview' : IDL.Func([IDL.Nat, IDL.Principal, IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignReviewerToTopic' : IDL.Func(
       [IDL.Principal, IDL.Nat, IDL.Int, IDL.Int],
@@ -258,6 +254,10 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Null,
     'notFoundError' : IDL.Null,
   });
+  const Recommendation = IDL.Variant({
+    'reject' : IDL.Null,
+    'adopt' : IDL.Null,
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -282,6 +282,25 @@ export const idlFactory = ({ IDL }) => {
     'assignments' : IDL.Vec(IDL.Tuple(IDL.Nat, ReviewerAssignment)),
     'reviewer' : Reviewer,
   });
+  const AuditActionType = IDL.Variant({
+    'fixReviewStatus' : IDL.Null,
+    'removeReview' : IDL.Null,
+    'editReviewLink' : IDL.Null,
+    'addReview' : IDL.Null,
+  });
+  const AuditLogEntry = IDL.Record({
+    'id' : IDL.Nat,
+    'adminPrincipal' : IDL.Principal,
+    'actionType' : AuditActionType,
+    'reviewerNickname' : IDL.Text,
+    'comment' : IDL.Text,
+    'proposalTitle' : IDL.Text,
+    'afterValue' : IDL.Opt(IDL.Text),
+    'timestamp' : IDL.Int,
+    'reviewerPrincipal' : IDL.Principal,
+    'beforeValue' : IDL.Opt(IDL.Text),
+    'proposalId' : IDL.Nat,
+  });
   const UserProfile = IDL.Record({
     'nickname' : IDL.Text,
     'forumProfileUrl' : IDL.Text,
@@ -294,10 +313,6 @@ export const idlFactory = ({ IDL }) => {
     'creationDate' : IDL.Int,
     'timestamp' : IDL.Int,
     'proposalId' : IDL.Nat,
-  });
-  const Recommendation = IDL.Variant({
-    'reject' : IDL.Null,
-    'adopt' : IDL.Null,
   });
   const Review = IDL.Record({
     'status' : IDL.Variant({ 'paid' : IDL.Null, 'volunteer' : IDL.Null }),
@@ -337,28 +352,9 @@ export const idlFactory = ({ IDL }) => {
     'body' : IDL.Vec(IDL.Nat8),
     'headers' : IDL.Vec(http_header),
   });
-  const AuditActionType = IDL.Variant({
-    'addReview' : IDL.Null,
-    'removeReview' : IDL.Null,
-    'editReviewLink' : IDL.Null,
-    'fixReviewStatus' : IDL.Null,
-  });
-  const AuditLogEntry = IDL.Record({
-    'id' : IDL.Nat,
-    'timestamp' : IDL.Int,
-    'adminPrincipal' : IDL.Principal,
-    'actionType' : AuditActionType,
-    'proposalId' : IDL.Nat,
-    'proposalTitle' : IDL.Text,
-    'reviewerPrincipal' : IDL.Principal,
-    'reviewerNickname' : IDL.Text,
-    'comment' : IDL.Text,
-    'beforeValue' : IDL.Opt(IDL.Text),
-    'afterValue' : IDL.Opt(IDL.Text),
-  });
-
+  
   return IDL.Service({
-    '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    '_initializeAccessControl' : IDL.Func([], [], []),
     'addAdmin' : IDL.Func([IDL.Principal], [], []),
     'addOrUpdateReviewer' : IDL.Func(
         [IDL.Principal, IDL.Text, IDL.Text],
@@ -375,11 +371,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
-    'adminRemoveReview' : IDL.Func(
-        [IDL.Nat, IDL.Principal, IDL.Text],
-        [],
-        [],
-      ),
+    'adminRemoveReview' : IDL.Func([IDL.Nat, IDL.Principal, IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignReviewerToTopic' : IDL.Func(
         [IDL.Principal, IDL.Nat, IDL.Int, IDL.Int],

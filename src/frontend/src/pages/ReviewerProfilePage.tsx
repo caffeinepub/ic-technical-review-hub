@@ -32,8 +32,6 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Page } from "../App";
-import { Recommendation } from "../backend";
-import type { Proposal, Review } from "../backend";
 import {
   useGetReviewerAssignments,
   useGetReviewerDetail,
@@ -42,6 +40,8 @@ import {
   useGetReviewerTodos,
 } from "../hooks/useQueries";
 import { formatDateTime } from "../lib/dateUtils";
+import { Recommendation } from "../lib/domainTypes";
+import type { Proposal, Review } from "../lib/domainTypes";
 import { topicIdToDisplayName } from "../lib/topicUtils";
 
 interface ReviewerProfilePageProps {

@@ -68,7 +68,6 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Page } from "../App";
-import type { Proposal, Reviewer } from "../backend";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
   useAddAdmin,
@@ -90,6 +89,7 @@ import {
   useUpdateReviewer,
 } from "../hooks/useQueries";
 import { formatDateTime, formatDateTimeShort } from "../lib/dateUtils";
+import type { Proposal, Reviewer } from "../lib/domainTypes";
 import { topicIdToDisplayName, topicStringToId } from "../lib/topicUtils";
 
 interface AdminDashboardProps {
@@ -1802,26 +1802,16 @@ function ProposalsTab({ activeTab }: { activeTab: string }) {
         topic: topicId,
       };
 
-      const saved = await saveProposal.mutateAsync(proposalToSave);
+      await saveProposal.mutateAsync(proposalToSave);
 
-      if (saved) {
-        toast.success(
-          `Proposal #${fetchedIndividualProposal.proposal_id} saved successfully`,
-        );
-        setFetchedIndividualProposal({
-          ...fetchedIndividualProposal,
-          isAlreadyStored: true,
-        });
-        setProposalIdInput("");
-      } else {
-        toast.info(
-          `Proposal #${fetchedIndividualProposal.proposal_id} already exists in the registry`,
-        );
-        setFetchedIndividualProposal({
-          ...fetchedIndividualProposal,
-          isAlreadyStored: true,
-        });
-      }
+      toast.success(
+        `Proposal #${fetchedIndividualProposal.proposal_id} saved successfully`,
+      );
+      setFetchedIndividualProposal({
+        ...fetchedIndividualProposal,
+        isAlreadyStored: true,
+      });
+      setProposalIdInput("");
     } catch (error: any) {
       const errorMsg = error.message || "Failed to save proposal";
       console.error("Save individual proposal error:", error);

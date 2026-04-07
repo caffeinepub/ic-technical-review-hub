@@ -12,6 +12,19 @@ export interface TransformationOutput {
     body: Uint8Array;
     headers: Array<http_header>;
 }
+export interface AuditLogEntry {
+    id: bigint;
+    adminPrincipal: Principal;
+    actionType: AuditActionType;
+    reviewerNickname: string;
+    comment: string;
+    proposalTitle: string;
+    afterValue?: string;
+    timestamp: bigint;
+    reviewerPrincipal: Principal;
+    beforeValue?: string;
+    proposalId: bigint;
+}
 export interface Reviewer {
     principal: Principal;
     nickname: string;
@@ -69,24 +82,17 @@ export interface UserProfile {
     nickname: string;
     forumProfileUrl: string;
 }
-export interface AuditLogEntry {
-    id: bigint;
-    timestamp: bigint;
-    adminPrincipal: Principal;
-    actionType: AuditActionType;
-    proposalId: bigint;
-    proposalTitle: string;
-    reviewerPrincipal: Principal;
-    reviewerNickname: string;
-    comment: string;
-    beforeValue: string | null;
-    afterValue: string | null;
-}
 export enum AddOrUpdateResult {
     updateError = "updateError",
     duplicateError = "duplicateError",
     success = "success",
     notFoundError = "notFoundError"
+}
+export enum AuditActionType {
+    fixReviewStatus = "fixReviewStatus",
+    removeReview = "removeReview",
+    editReviewLink = "editReviewLink",
+    addReview = "addReview"
 }
 export enum FixReviewStatusResult {
     invalidProposal = "invalidProposal",
@@ -111,12 +117,6 @@ export enum UserRole {
 export enum Variant_paid_volunteer {
     paid = "paid",
     volunteer = "volunteer"
-}
-export enum AuditActionType {
-    addReview = "addReview",
-    removeReview = "removeReview",
-    editReviewLink = "editReviewLink",
-    fixReviewStatus = "fixReviewStatus"
 }
 export interface backendInterface {
     addAdmin(principal: Principal): Promise<void>;

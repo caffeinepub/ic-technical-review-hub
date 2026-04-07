@@ -42,7 +42,6 @@ import {
 import { ExternalLink, Filter, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Page } from "../App";
-import type { Proposal } from "../backend";
 import {
   useGetAllTopics,
   useGetProposalReviewCount,
@@ -51,6 +50,7 @@ import {
   useGetReviewerPublicTable,
 } from "../hooks/useQueries";
 import { formatDateTime, formatDateTimeShort } from "../lib/dateUtils";
+import type { Proposal } from "../lib/domainTypes";
 import { topicIdToDisplayName } from "../lib/topicUtils";
 
 interface HomePageProps {

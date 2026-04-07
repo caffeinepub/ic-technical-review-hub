@@ -1,0 +1,202 @@
+type http_request_result = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+type http_header = 
+ record {
+   name: text;
+   value: text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserProfile = 
+ record {
+   forumProfileUrl: text;
+   nickname: text;
+ };
+type TransformationOutput = 
+ record {
+   body: blob;
+   headers: vec http_header;
+   status: nat;
+ };
+type TransformationInput = 
+ record {
+   context: blob;
+   response: http_request_result;
+ };
+type ReviewerWithAssignments = 
+ record {
+   assignments: vec record {
+                      nat;
+                      ReviewerAssignment;
+                    };
+   reviewer: Reviewer;
+ };
+type ReviewerStatus = 
+ variant {
+   paidGrantee;
+   volunteer;
+   volunteerFormerGrantee;
+ };
+type ReviewerDetail = 
+ record {
+   allAssignments: vec record {
+                         nat;
+                         ReviewerAssignment;
+                       };
+   currentAssignments: vec record {
+                             nat;
+                             ReviewerAssignment;
+                           };
+   paidReviews: nat;
+   reviewer: Reviewer;
+   status: ReviewerStatus;
+   totalReviews: nat;
+   voluntaryReviews: nat;
+ };
+type ReviewerAssignment = 
+ record {
+   endDate: int;
+   startDate: int;
+ };
+type Reviewer = 
+ record {
+   forumProfileUrl: text;
+   nickname: text;
+   "principal": principal;
+ };
+type Review = 
+ record {
+   link: text;
+   proposalId: nat;
+   recommendation: Recommendation;
+   reviewer: Reviewer;
+   status: variant {
+             paid;
+             volunteer;
+           };
+   timestamp: int;
+   topic: nat;
+ };
+type Recommendation = 
+ variant {
+   adopt;
+   reject;
+ };
+type Proposal = 
+ record {
+   creationDate: int;
+   deadline: int;
+   deadlineDate: int;
+   proposalId: nat;
+   timestamp: int;
+   title: text;
+   topic: nat;
+ };
+type FixReviewStatusResult = 
+ variant {
+   alreadyCorrect;
+   fixedReviewStatus;
+   invalidProposal;
+   invalidReviewer;
+ };
+type AuditLogEntry = 
+ record {
+   actionType: AuditActionType;
+   adminPrincipal: principal;
+   afterValue: opt text;
+   beforeValue: opt text;
+   comment: text;
+   id: nat;
+   proposalId: nat;
+   proposalTitle: text;
+   reviewerNickname: text;
+   reviewerPrincipal: principal;
+   timestamp: int;
+ };
+type AuditActionType = 
+ variant {
+   addReview;
+   editReviewLink;
+   fixReviewStatus;
+   removeReview;
+ };
+type AddOrUpdateResult = 
+ variant {
+   duplicateError;
+   notFoundError;
+   success;
+   updateError;
+ };
+service : {
+  _initializeAccessControl: () -> ();
+  addAdmin: ("principal": principal) -> ();
+  addOrUpdateReviewer: ("principal": principal, nickname: text,
+   forumProfileUrl: text) -> (AddOrUpdateResult);
+  addProposal: (proposalId: nat, title: text, timestamp: int, deadline: 
+   int, creationDate: int, deadlineDate: int, topic: nat) -> ();
+  adminAddReview: (proposalId: nat, reviewerPrincipal: principal, reviewLink:
+   text, recommendation: Recommendation, comment: text) -> ();
+  adminRemoveReview: (proposalId: nat, reviewerPrincipal: principal, comment:
+   text) -> ();
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  assignReviewerToTopic: (reviewer: principal, topic: nat, startDate: 
+   int, endDate: int) -> ();
+  clearAllProposals: () -> ();
+  fetchIndividualProposal: (proposalId: nat) -> (text);
+  fixReviewStatus: (proposalId: nat, reviewerPrincipal: principal, comment:
+   text) -> (FixReviewStatusResult);
+  getAllAdmins: () -> (vec principal) query;
+  getAllProposalIds: () -> (vec nat) query;
+  getAllReviewers: () -> (vec ReviewerWithAssignments) query;
+  getAllTopics: () -> (vec record {
+                             nat;
+                             text;
+                           }) query;
+  getAuditLog: (page: nat, pageSize: nat) -> (vec AuditLogEntry) query;
+  getAuditLogSize: () -> (nat) query;
+  getAuthorizedProposalSubmitter: () -> (opt principal) query;
+  getCallerUserProfile: () -> (opt UserProfile) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getProposal: (proposalId: nat) -> (opt Proposal) query;
+  getProposalReviews: (proposalId: nat) -> (vec Review) query;
+  getProposals: (topicFilter: opt nat) -> (vec Proposal) query;
+  getRecommendationCounts: (proposalId: nat) -> (nat, nat) query;
+  getReviewer: ("principal": principal) -> (opt Reviewer) query;
+  getReviewerAssignments: ("principal": principal) ->
+   (vec record {
+          nat;
+          ReviewerAssignment;
+        }) query;
+  getReviewerDetail: ("principal": principal) -> (opt ReviewerDetail) query;
+  getReviewerMissedProposals: ("principal": principal) ->
+   (vec Proposal) query;
+  getReviewerReviewHistory: ("principal": principal) -> (vec Review) query;
+  getReviewerTodos: ("principal": principal) -> (vec Proposal) query;
+  getTopicDisplayName: (topicId: nat) -> (text) query;
+  getUserProfile: (user: principal) -> (opt UserProfile) query;
+  isAdmin: ("principal": principal) -> (bool) query;
+  isCallerAdmin: () -> (bool) query;
+  isReviewer: () -> (bool) query;
+  removeAdmin: ("principal": principal) -> ();
+  removeProposal: (proposalId: nat) -> ();
+  removeReviewer: ("principal": principal) -> ();
+  saveCallerUserProfile: (profile: UserProfile) -> ();
+  saveExternalProposal: (newProposal: Proposal) -> (bool);
+  saveExternalProposals: (newProposals: vec Proposal) -> (vec nat);
+  setAuthorizedProposalSubmitter: ("principal": opt principal) -> ();
+  submitReview: (proposalId: nat, reviewLink: text, recommendation:
+   Recommendation) -> ();
+  transform: (input: TransformationInput) -> (TransformationOutput) query;
+  updateReviewLink: (proposalId: nat, reviewerPrincipal: principal, newLink:
+   text, comment: text) -> (bool);
+  updateReviewer: ("principal": principal, nickname: text, forumProfileUrl:
+   text) -> (AddOrUpdateResult);
+}
