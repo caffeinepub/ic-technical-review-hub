@@ -53,13 +53,10 @@ export const indexRoute = createRoute({
       typeof search.topic === "string" && /^\d+$/.test(search.topic)
         ? search.topic
         : undefined;
-    const rawPage =
-      typeof search.page === "string" && /^\d+$/.test(search.page)
-        ? Math.max(1, Number(search.page))
-        : typeof search.page === "number" && search.page > 1
-          ? search.page
-          : undefined;
-    const page = rawPage && rawPage > 1 ? rawPage : undefined;
+    // Accept both string (from URL) and number (from previous validateSearch pass)
+    const rawPage = Number(search.page);
+    const page =
+      !Number.isNaN(rawPage) && rawPage > 1 ? Math.floor(rawPage) : undefined;
     const activeGranteesOnly =
       search.activeGranteesOnly === "true" || search.activeGranteesOnly === true
         ? true
@@ -97,25 +94,23 @@ export const reviewerProfileRoute = createRoute({
       ? (search.tab as "history" | "todos" | "assignments")
       : undefined; // omit default 'history'
 
+    // Accept both string (from URL) and number (from previous validateSearch pass)
+    const rawReviewPage = Number(search.reviewPage);
     const reviewPage =
-      typeof search.reviewPage === "string" &&
-      /^\d+$/.test(search.reviewPage) &&
-      Number(search.reviewPage) > 1
-        ? Number(search.reviewPage)
+      !Number.isNaN(rawReviewPage) && rawReviewPage > 1
+        ? Math.floor(rawReviewPage)
         : undefined;
 
+    const rawTodoPage = Number(search.todoPage);
     const todoPage =
-      typeof search.todoPage === "string" &&
-      /^\d+$/.test(search.todoPage) &&
-      Number(search.todoPage) > 1
-        ? Number(search.todoPage)
+      !Number.isNaN(rawTodoPage) && rawTodoPage > 1
+        ? Math.floor(rawTodoPage)
         : undefined;
 
+    const rawAssignmentPage = Number(search.assignmentPage);
     const assignmentPage =
-      typeof search.assignmentPage === "string" &&
-      /^\d+$/.test(search.assignmentPage) &&
-      Number(search.assignmentPage) > 1
-        ? Number(search.assignmentPage)
+      !Number.isNaN(rawAssignmentPage) && rawAssignmentPage > 1
+        ? Math.floor(rawAssignmentPage)
         : undefined;
 
     return { tab, reviewPage, todoPage, assignmentPage };
@@ -139,12 +134,10 @@ export const adminRoute = createRoute({
       ? (search.tab as AdminSearch["tab"])
       : undefined; // omit default 'admins'
 
+    // Accept both string (from URL) and number (from previous validateSearch pass)
+    const rawPage = Number(search.page);
     const page =
-      typeof search.page === "string" &&
-      /^\d+$/.test(search.page) &&
-      Number(search.page) > 1
-        ? Number(search.page)
-        : undefined;
+      !Number.isNaN(rawPage) && rawPage > 1 ? Math.floor(rawPage) : undefined;
 
     return { tab, page };
   },
@@ -157,11 +150,11 @@ export const auditLogRoute = createRoute({
   component: AuditLogPage,
   validateSearch: (search: Record<string, unknown>): AuditLogSearch => {
     // page=0 is default for audit log — omit it
-    const rawPage =
-      typeof search.page === "string" && /^\d+$/.test(search.page)
-        ? Math.max(0, Number(search.page))
-        : 0;
-    return { page: rawPage > 0 ? rawPage : undefined };
+    // Accept both string (from URL) and number (from previous validateSearch pass)
+    const rawPage = Number(search.page);
+    const page =
+      !Number.isNaN(rawPage) && rawPage > 0 ? Math.floor(rawPage) : undefined;
+    return { page };
   },
 });
 
