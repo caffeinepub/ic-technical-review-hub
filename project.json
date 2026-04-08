@@ -1,0 +1,26 @@
+{
+  "overview": "The NNS Technical Review Hub is a decentralized platform for managing and transparently displaying technical reviews of Internet Computer NNS proposals. It features role-based access for admins, reviewers, and public visitors, proposal syncing from the IC dashboard API, reviewer and grant assignment management, vote recommendations (Adopt/Reject), a public audit log of all admin review actions, and an Institutional Minimalist design optimized for desktop and mobile.",
+  "features": [
+    "Proposal management with IC dashboard API sync and topic filtering",
+    "Reviewer management with Volunteer, Former Grantee, and Paid Grantee types",
+    "Vote recommendation (Adopt/Reject) per review with aggregated proposal-level badges",
+    "Admin actions: add/remove/edit reviews on behalf of reviewers with mandatory comments",
+    "Public paginated audit log of all admin review actions",
+    "Admin-configurable authorized principal for automated proposal submissions",
+    "Tabbed reviewer detail pages with Review History, TODOs, and Grant Assignment History",
+    "Responsive Institutional Minimalist design with burger menu on mobile",
+    "Backend canister downtime detection with user-friendly alerts"
+  ],
+  "category": "governance",
+  "tags": [
+    "nns",
+    "internet-computer",
+    "governance",
+    "proposals",
+    "reviews",
+    "audit-log",
+    "dfinity",
+    "grants"
+  ],
+  "last_updated": "2026-04-07T21:35:48.272Z"
+}

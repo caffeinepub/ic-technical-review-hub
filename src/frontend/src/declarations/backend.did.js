@@ -83,6 +83,17 @@ export const Review = IDL.Record({
   'reviewer' : Reviewer,
   'proposalId' : IDL.Nat,
 });
+export const ProposalWithCounts = IDL.Record({
+  'title' : IDL.Text,
+  'topic' : IDL.Nat,
+  'deadlineDate' : IDL.Int,
+  'deadline' : IDL.Int,
+  'creationDate' : IDL.Int,
+  'rejectCount' : IDL.Nat,
+  'adoptCount' : IDL.Nat,
+  'timestamp' : IDL.Int,
+  'proposalId' : IDL.Nat,
+});
 export const ReviewerStatus = IDL.Variant({
   'paidGrantee' : IDL.Null,
   'volunteerFormerGrantee' : IDL.Null,
@@ -175,7 +186,11 @@ export const idlService = IDL.Service({
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getProposal' : IDL.Func([IDL.Nat], [IDL.Opt(Proposal)], ['query']),
   'getProposalReviews' : IDL.Func([IDL.Nat], [IDL.Vec(Review)], ['query']),
-  'getProposals' : IDL.Func([IDL.Opt(IDL.Nat)], [IDL.Vec(Proposal)], ['query']),
+  'getProposals' : IDL.Func(
+      [IDL.Opt(IDL.Nat)],
+      [IDL.Vec(ProposalWithCounts)],
+      ['query'],
+    ),
   'getRecommendationCounts' : IDL.Func(
       [IDL.Nat],
       [IDL.Nat, IDL.Nat],
@@ -323,6 +338,17 @@ export const idlFactory = ({ IDL }) => {
     'reviewer' : Reviewer,
     'proposalId' : IDL.Nat,
   });
+  const ProposalWithCounts = IDL.Record({
+    'title' : IDL.Text,
+    'topic' : IDL.Nat,
+    'deadlineDate' : IDL.Int,
+    'deadline' : IDL.Int,
+    'creationDate' : IDL.Int,
+    'rejectCount' : IDL.Nat,
+    'adoptCount' : IDL.Nat,
+    'timestamp' : IDL.Int,
+    'proposalId' : IDL.Nat,
+  });
   const ReviewerStatus = IDL.Variant({
     'paidGrantee' : IDL.Null,
     'volunteerFormerGrantee' : IDL.Null,
@@ -414,7 +440,7 @@ export const idlFactory = ({ IDL }) => {
     'getProposalReviews' : IDL.Func([IDL.Nat], [IDL.Vec(Review)], ['query']),
     'getProposals' : IDL.Func(
         [IDL.Opt(IDL.Nat)],
-        [IDL.Vec(Proposal)],
+        [IDL.Vec(ProposalWithCounts)],
         ['query'],
       ),
     'getRecommendationCounts' : IDL.Func(

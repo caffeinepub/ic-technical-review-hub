@@ -46,7 +46,6 @@ import {
   useGetAllTopics,
   useGetProposalReviewCount,
   useGetProposals,
-  useGetRecommendationCounts,
   useGetReviewerPublicTable,
 } from "../hooks/useQueries";
 import { formatDateTime, formatDateTimeShort } from "../lib/dateUtils";
@@ -664,14 +663,9 @@ interface ProposalRowProps {
 
 function ProposalRow({ proposal, onNavigate, rowIsOdd }: ProposalRowProps) {
   const { data: reviewCount } = useGetProposalReviewCount(proposal.proposalId);
-  const { data: recommendationCounts } = useGetRecommendationCounts(
-    proposal.proposalId,
-  );
 
-  const adoptCount = recommendationCounts ? Number(recommendationCounts[0]) : 0;
-  const rejectCount = recommendationCounts
-    ? Number(recommendationCounts[1])
-    : 0;
+  const adoptCount = proposal.adoptCount ? Number(proposal.adoptCount) : 0;
+  const rejectCount = proposal.rejectCount ? Number(proposal.rejectCount) : 0;
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -736,14 +730,9 @@ function ProposalCard({
   onNavigate,
 }: { proposal: Proposal; onNavigate: (page: Page) => void }) {
   const { data: reviewCount } = useGetProposalReviewCount(proposal.proposalId);
-  const { data: recommendationCounts } = useGetRecommendationCounts(
-    proposal.proposalId,
-  );
 
-  const adoptCount = recommendationCounts ? Number(recommendationCounts[0]) : 0;
-  const rejectCount = recommendationCounts
-    ? Number(recommendationCounts[1])
-    : 0;
+  const adoptCount = proposal.adoptCount ? Number(proposal.adoptCount) : 0;
+  const rejectCount = proposal.rejectCount ? Number(proposal.rejectCount) : 0;
 
   return (
     <button

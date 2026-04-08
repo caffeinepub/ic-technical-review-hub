@@ -48,6 +48,18 @@ actor {
     topic : Nat;
   };
 
+  type ProposalWithCounts = {
+    proposalId : Nat;
+    title : Text;
+    timestamp : Int;
+    deadline : Int;
+    creationDate : Int;
+    deadlineDate : Int;
+    topic : Nat;
+    adoptCount : Nat;
+    rejectCount : Nat;
+  };
+
   type Review = {
     proposalId : Nat;
     reviewer : Reviewer;
@@ -1003,18 +1015,29 @@ actor {
   };
 
   // Proposal Queries
-  public query func getProposals(topicFilter : ?Nat) : async [Proposal] {
+  public query func getProposals(topicFilter : ?Nat) : async [ProposalWithCounts] {
     let allProposals = proposals.values().toArray();
-    switch (topicFilter) {
-      case (null) {
-        allProposals;
-      };
+    let filtered = switch (topicFilter) {
+      case (null) { allProposals };
       case (?topic) {
-        allProposals.filter(
-          func(p) { p.topic == topic }
-        );
+        allProposals.filter(func(p) { p.topic == topic })
       };
     };
+    filtered.map<Proposal, ProposalWithCounts>(func(p) {
+      let reviewList = switch (reviews.get(p.proposalId)) {
+        case (null) { [] };
+        case (?revs) { revs };
+      };
+      var adoptCount = 0;
+      var rejectCount = 0;
+      for (review in reviewList.vals()) {
+        switch (review.recommendation) {
+          case (#adopt) { adoptCount += 1 };
+          case (#reject) { rejectCount += 1 };
+        };
+      };
+      { p with adoptCount; rejectCount };
+    });
   };
 
   public query func getProposal(proposalId : Nat) : async ?Proposal {

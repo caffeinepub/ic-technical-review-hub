@@ -5,8 +5,8 @@
 import type { Principal } from "@dfinity/principal";
 
 export enum Recommendation {
-  adopt = "Adopt",
-  reject = "Reject",
+  adopt = "adopt",
+  reject = "reject",
 }
 
 export interface Proposal {
@@ -17,6 +17,8 @@ export interface Proposal {
   creationDate: bigint;
   deadlineDate: bigint;
   topic: bigint;
+  adoptCount?: bigint;
+  rejectCount?: bigint;
 }
 
 export interface ReviewerSummary {

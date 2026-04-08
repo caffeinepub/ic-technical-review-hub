@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -115,7 +116,16 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   if (adminLoading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-8">
-        <div className="text-center">Loading...</div>
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-48 rounded-md" />
+          <Skeleton className="h-5 w-72 rounded-md" />
+          <div className="space-y-3 pt-4">
+            {[...Array(5)].map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
+              <Skeleton key={i} className="h-14 w-full rounded-md" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -352,8 +362,9 @@ function SettingsTab({ activeTab }: { activeTab: string }) {
             </div>
 
             {isLoading ? (
-              <div className="text-center py-4 text-muted-foreground">
-                Loading...
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full rounded-md" />
+                <Skeleton className="h-10 w-48 rounded-md" />
               </div>
             ) : (
               <>
@@ -607,8 +618,11 @@ function AdminsTab({ activeTab }: { activeTab: string }) {
       </CardHeader>
       <CardContent>
         {adminsLoading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Loading admins...
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
+              <Skeleton key={i} className="h-14 w-full rounded-md" />
+            ))}
           </div>
         ) : adminsList.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">

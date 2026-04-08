@@ -44,6 +44,17 @@ export interface Proposal {
   'timestamp' : bigint,
   'proposalId' : bigint,
 }
+export interface ProposalWithCounts {
+  'title' : string,
+  'topic' : bigint,
+  'deadlineDate' : bigint,
+  'deadline' : bigint,
+  'creationDate' : bigint,
+  'rejectCount' : bigint,
+  'adoptCount' : bigint,
+  'timestamp' : bigint,
+  'proposalId' : bigint,
+}
 export type Recommendation = { 'reject' : null } |
   { 'adopt' : null };
 export interface Review {
@@ -135,7 +146,7 @@ export interface _SERVICE {
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getProposal' : ActorMethod<[bigint], [] | [Proposal]>,
   'getProposalReviews' : ActorMethod<[bigint], Array<Review>>,
-  'getProposals' : ActorMethod<[[] | [bigint]], Array<Proposal>>,
+  'getProposals' : ActorMethod<[[] | [bigint]], Array<ProposalWithCounts>>,
   'getRecommendationCounts' : ActorMethod<[bigint], [bigint, bigint]>,
   'getReviewer' : ActorMethod<[Principal], [] | [Reviewer]>,
   'getReviewerAssignments' : ActorMethod<

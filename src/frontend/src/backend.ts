@@ -134,6 +134,17 @@ export interface http_request_result {
     body: Uint8Array;
     headers: Array<http_header>;
 }
+export interface ProposalWithCounts {
+    title: string;
+    topic: bigint;
+    deadlineDate: bigint;
+    deadline: bigint;
+    creationDate: bigint;
+    rejectCount: bigint;
+    adoptCount: bigint;
+    timestamp: bigint;
+    proposalId: bigint;
+}
 export interface ReviewerDetail {
     paidReviews: bigint;
     status: ReviewerStatus;
@@ -223,7 +234,7 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getProposal(proposalId: bigint): Promise<Proposal | null>;
     getProposalReviews(proposalId: bigint): Promise<Array<Review>>;
-    getProposals(topicFilter: bigint | null): Promise<Array<Proposal>>;
+    getProposals(topicFilter: bigint | null): Promise<Array<ProposalWithCounts>>;
     getRecommendationCounts(proposalId: bigint): Promise<[bigint, bigint]>;
     getReviewer(principal: Principal): Promise<Reviewer | null>;
     getReviewerAssignments(principal: Principal): Promise<Array<[bigint, ReviewerAssignment]>>;
@@ -559,7 +570,7 @@ export class Backend implements backendInterface {
             return from_candid_vec_n20(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getProposals(arg0: bigint | null): Promise<Array<Proposal>> {
+    async getProposals(arg0: bigint | null): Promise<Array<ProposalWithCounts>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getProposals(to_candid_opt_n26(this._uploadFile, this._downloadFile, arg0));

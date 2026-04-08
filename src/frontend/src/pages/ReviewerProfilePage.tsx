@@ -60,8 +60,9 @@ export default function ReviewerProfilePage({
     useGetReviewerReviewHistory(reviewerPrincipal);
   const { isLoading: assignmentsLoading } =
     useGetReviewerAssignments(reviewerPrincipal);
-  const { data: todoProposals } = useGetReviewerTodos(reviewerPrincipal);
-  const { data: missedProposals } =
+  const { data: todoProposals, isLoading: todosLoading } =
+    useGetReviewerTodos(reviewerPrincipal);
+  const { data: missedProposals, isLoading: missedLoading } =
     useGetReviewerMissedProposals(reviewerPrincipal);
   const [activeTab, setActiveTab] = useState("history");
   const [reviewsPage, setReviewsPage] = useState(1);
@@ -295,7 +296,7 @@ export default function ReviewerProfilePage({
               <CardContent>
                 {reviewsLoading ? (
                   <div className="space-y-3">
-                    {[...Array(3)].map((_, i) => (
+                    {[...Array(5)].map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
                       <Skeleton key={i} className="h-20 w-full rounded-md" />
                     ))}
@@ -389,7 +390,14 @@ export default function ReviewerProfilePage({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {todoProposals && todoProposals.length === 0 ? (
+                {todosLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(5)].map((_, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
+                      <Skeleton key={i} className="h-14 w-full rounded-md" />
+                    ))}
+                  </div>
+                ) : todoProposals && todoProposals.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No pending reviews at this time
                   </div>
@@ -480,7 +488,8 @@ export default function ReviewerProfilePage({
               </CardContent>
             </Card>
 
-            {missedProposals && missedProposals.length > 0 && (
+            {(missedLoading ||
+              (missedProposals && missedProposals.length > 0)) && (
               <Card className="border-destructive/50 rounded-lg mt-6">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-2">
@@ -493,34 +502,43 @@ export default function ReviewerProfilePage({
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {missedProposals.map((proposal) => (
-                      <button
-                        type="button"
-                        key={proposal.proposalId.toString()}
-                        onClick={() =>
-                          onNavigate({
-                            type: "proposal",
-                            proposalId: proposal.proposalId,
-                          })
-                        }
-                        className="w-full text-left p-3 border border-border rounded-lg hover:bg-accent transition-all duration-200"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium break-words">
-                              #{proposal.proposalId.toString()} -{" "}
-                              {proposal.title}
-                            </div>
-                            <div className="text-sm text-muted-foreground mt-1">
-                              {topicIdToDisplayName(proposal.topic)} • Deadline:{" "}
-                              {formatDateTime(proposal.deadline)}
+                  {missedLoading ? (
+                    <div className="space-y-3">
+                      {[...Array(3)].map((_, i) => (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
+                        <Skeleton key={i} className="h-14 w-full rounded-md" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {missedProposals?.map((proposal) => (
+                        <button
+                          type="button"
+                          key={proposal.proposalId.toString()}
+                          onClick={() =>
+                            onNavigate({
+                              type: "proposal",
+                              proposalId: proposal.proposalId,
+                            })
+                          }
+                          className="w-full text-left p-3 border border-border rounded-lg hover:bg-accent transition-all duration-200"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium break-words">
+                                #{proposal.proposalId.toString()} -{" "}
+                                {proposal.title}
+                              </div>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                {topicIdToDisplayName(proposal.topic)} •
+                                Deadline: {formatDateTime(proposal.deadline)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -543,10 +561,9 @@ export default function ReviewerProfilePage({
               <CardContent>
                 {assignmentsLoading ? (
                   <div className="space-y-3">
-                    {[...Array(3)].map((_, i) => (
+                    {[...Array(5)].map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-                      // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-                      <Skeleton key={i} className="h-20 w-full rounded-md" />
+                      <Skeleton key={i} className="h-14 w-full rounded-md" />
                     ))}
                   </div>
                 ) : reviewerDetail.allAssignments &&

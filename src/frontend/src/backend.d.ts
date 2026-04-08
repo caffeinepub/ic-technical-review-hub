@@ -52,6 +52,17 @@ export interface http_request_result {
     body: Uint8Array;
     headers: Array<http_header>;
 }
+export interface ProposalWithCounts {
+    title: string;
+    topic: bigint;
+    deadlineDate: bigint;
+    deadline: bigint;
+    creationDate: bigint;
+    rejectCount: bigint;
+    adoptCount: bigint;
+    timestamp: bigint;
+    proposalId: bigint;
+}
 export interface ReviewerDetail {
     paidReviews: bigint;
     status: ReviewerStatus;
@@ -140,7 +151,7 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getProposal(proposalId: bigint): Promise<Proposal | null>;
     getProposalReviews(proposalId: bigint): Promise<Array<Review>>;
-    getProposals(topicFilter: bigint | null): Promise<Array<Proposal>>;
+    getProposals(topicFilter: bigint | null): Promise<Array<ProposalWithCounts>>;
     getRecommendationCounts(proposalId: bigint): Promise<[bigint, bigint]>;
     getReviewer(principal: Principal): Promise<Reviewer | null>;
     getReviewerAssignments(principal: Principal): Promise<Array<[bigint, ReviewerAssignment]>>;

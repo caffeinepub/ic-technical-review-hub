@@ -90,6 +90,18 @@ type Recommendation =
    adopt;
    reject;
  };
+type ProposalWithCounts = 
+ record {
+   adoptCount: nat;
+   creationDate: int;
+   deadline: int;
+   deadlineDate: int;
+   proposalId: nat;
+   rejectCount: nat;
+   timestamp: int;
+   title: text;
+   topic: nat;
+ };
 type Proposal = 
  record {
    creationDate: int;
@@ -167,7 +179,7 @@ service : {
   getCallerUserRole: () -> (UserRole) query;
   getProposal: (proposalId: nat) -> (opt Proposal) query;
   getProposalReviews: (proposalId: nat) -> (vec Review) query;
-  getProposals: (topicFilter: opt nat) -> (vec Proposal) query;
+  getProposals: (topicFilter: opt nat) -> (vec ProposalWithCounts) query;
   getRecommendationCounts: (proposalId: nat) -> (nat, nat) query;
   getReviewer: ("principal": principal) -> (opt Reviewer) query;
   getReviewerAssignments: ("principal": principal) ->
