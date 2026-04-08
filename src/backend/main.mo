@@ -58,6 +58,7 @@ actor {
     topic : Nat;
     adoptCount : Nat;
     rejectCount : Nat;
+    totalReviewCount : Nat;
   };
 
   type Review = {
@@ -1036,7 +1037,7 @@ actor {
           case (#reject) { rejectCount += 1 };
         };
       };
-      { p with adoptCount; rejectCount };
+      { p with adoptCount; rejectCount; totalReviewCount = adoptCount + rejectCount };
     });
   };
 

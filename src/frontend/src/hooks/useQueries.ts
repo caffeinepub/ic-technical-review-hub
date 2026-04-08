@@ -14,6 +14,7 @@ import type {
   UserRole,
 } from "../lib/domainTypes";
 import { useActor } from "./useActor";
+import type { BackendProposalWithCounts } from "./useActor";
 import { useInternetIdentity } from "./useInternetIdentity";
 
 // Global error handler for backend errors
@@ -127,7 +128,7 @@ export function useGetAllAdmins() {
   return useQuery<Principal[]>({
     queryKey: ["allAdmins"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getAllAdmins();
       } catch (error: any) {
@@ -186,7 +187,7 @@ export function useGetAuthorizedProposalSubmitter() {
   return useQuery<Principal | null>({
     queryKey: ["authorizedProposalSubmitter"],
     queryFn: async () => {
-      if (!actor) return null;
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getAuthorizedProposalSubmitter();
       } catch (error: any) {
@@ -224,13 +225,30 @@ export function useSetAuthorizedProposalSubmitter() {
 export function useGetProposals(topicFilter?: bigint | null) {
   const { actor, isFetching } = useActor();
 
-  return useQuery<Proposal[]>({
+  return useQuery({
     queryKey: ["proposals", topicFilter?.toString() ?? "all"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
-        return await actor.getProposals(topicFilter ?? null);
-      } catch (error: any) {
+        const raw = await actor.getProposals(topicFilter ?? null);
+        // Map each ProposalWithCounts to a Proposal, adding reviewCount from
+        // the bundled totalReviewCount so no per-row queries are needed.
+        return raw.map((p: BackendProposalWithCounts) => {
+          const reviewCount = Number(p.totalReviewCount);
+          return {
+            proposalId: p.proposalId,
+            title: p.title,
+            timestamp: p.timestamp,
+            deadline: p.deadline,
+            creationDate: p.creationDate,
+            deadlineDate: p.deadlineDate,
+            topic: p.topic,
+            adoptCount: p.adoptCount,
+            rejectCount: p.rejectCount,
+            reviewCount,
+          };
+        });
+      } catch (error: unknown) {
         handleBackendError(error);
         throw error;
       }
@@ -246,7 +264,7 @@ export function useGetProposal(proposalId: bigint) {
   return useQuery<Proposal | null>({
     queryKey: ["proposal", proposalId.toString()],
     queryFn: async () => {
-      if (!proposals) return null;
+      if (!proposals) throw new Error("Proposals not ready");
       return proposals.find((p) => p.proposalId === proposalId) || null;
     },
     enabled: !!proposals,
@@ -259,7 +277,7 @@ export function useGetAllProposalIds() {
   return useQuery<bigint[]>({
     queryKey: ["allProposalIds"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getAllProposalIds();
       } catch (error: any) {
@@ -277,7 +295,7 @@ export function useGetProposalReviews(proposalId: bigint) {
   return useQuery<Review[]>({
     queryKey: ["proposalReviews", proposalId.toString()],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getProposalReviews(proposalId);
       } catch (error: any) {
@@ -295,7 +313,7 @@ export function useGetProposalReviewCount(proposalId: bigint) {
   return useQuery<bigint>({
     queryKey: ["proposalReviewCount", proposalId.toString()],
     queryFn: async () => {
-      if (!actor) return BigInt(0);
+      if (!actor) throw new Error("Actor not ready");
       try {
         const reviews = await actor.getProposalReviews(proposalId);
         return BigInt(reviews.length);
@@ -314,7 +332,7 @@ export function useGetRecommendationCounts(proposalId: bigint) {
   return useQuery<[bigint, bigint]>({
     queryKey: ["recommendationCounts", proposalId.toString()],
     queryFn: async () => {
-      if (!actor) return [BigInt(0), BigInt(0)];
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getRecommendationCounts(proposalId);
       } catch (error: any) {
@@ -653,7 +671,7 @@ export function useGetAllReviewers() {
   return useQuery<ReviewerWithAssignments[]>({
     queryKey: ["allReviewers"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getAllReviewers();
       } catch (error: any) {
@@ -707,7 +725,7 @@ export function useGetReviewerAssignments(principal: Principal) {
   return useQuery<Array<[bigint, any]>>({
     queryKey: ["reviewerAssignments", principal.toString()],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getReviewerAssignments(principal);
       } catch (error: any) {
@@ -725,7 +743,7 @@ export function useGetReviewerReviewHistory(principal: Principal) {
   return useQuery<Review[]>({
     queryKey: ["reviewerReviewHistory", principal.toString()],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getReviewerReviewHistory(principal);
       } catch (error: any) {
@@ -743,7 +761,7 @@ export function useGetReviewerTodos(principal: Principal) {
   return useQuery<Proposal[]>({
     queryKey: ["reviewerTodos", principal.toString()],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getReviewerTodos(principal);
       } catch (error: any) {
@@ -761,7 +779,7 @@ export function useGetReviewerMissedProposals(principal: Principal) {
   return useQuery<Proposal[]>({
     queryKey: ["reviewerMissedProposals", principal.toString()],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getReviewerMissedProposals(principal);
       } catch (error: any) {
@@ -780,7 +798,7 @@ export function useGetReviewerPublicTable() {
   return useQuery<Array<[Principal, Reviewer, string, Array<[bigint, any]>]>>({
     queryKey: ["reviewerPublicTable"],
     queryFn: async () => {
-      if (!allReviewers) return [];
+      if (!allReviewers) throw new Error("Reviewers not ready");
 
       const now = Date.now() * 1_000_000; // Convert to nanoseconds
 
@@ -967,7 +985,7 @@ export function useGetAllTopics() {
   return useQuery<Array<[bigint, string]>>({
     queryKey: ["allTopics"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getAllTopics();
       } catch (error: any) {
@@ -985,7 +1003,7 @@ export function useGetTopicDisplayName(topicId: bigint) {
   return useQuery<string>({
     queryKey: ["topicDisplayName", topicId.toString()],
     queryFn: async () => {
-      if (!actor) return "Unknown Topic";
+      if (!actor) throw new Error("Actor not ready");
       try {
         return await actor.getTopicDisplayName(topicId);
       } catch (error: any) {

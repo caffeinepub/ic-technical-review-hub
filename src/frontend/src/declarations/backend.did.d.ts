@@ -54,6 +54,7 @@ export interface ProposalWithCounts {
   'adoptCount' : bigint,
   'timestamp' : bigint,
   'proposalId' : bigint,
+  'totalReviewCount' : bigint,
 }
 export type Recommendation = { 'reject' : null } |
   { 'adopt' : null };

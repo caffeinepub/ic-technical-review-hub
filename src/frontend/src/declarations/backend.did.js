@@ -93,6 +93,7 @@ export const ProposalWithCounts = IDL.Record({
   'adoptCount' : IDL.Nat,
   'timestamp' : IDL.Int,
   'proposalId' : IDL.Nat,
+  'totalReviewCount' : IDL.Nat,
 });
 export const ReviewerStatus = IDL.Variant({
   'paidGrantee' : IDL.Null,
@@ -348,6 +349,7 @@ export const idlFactory = ({ IDL }) => {
     'adoptCount' : IDL.Nat,
     'timestamp' : IDL.Int,
     'proposalId' : IDL.Nat,
+    'totalReviewCount' : IDL.Nat,
   });
   const ReviewerStatus = IDL.Variant({
     'paidGrantee' : IDL.Null,

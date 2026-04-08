@@ -51,6 +51,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Page } from "../App";
+import { useActor } from "../hooks/useActor";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
   useAdminAddReview,
@@ -78,10 +79,14 @@ export default function ProposalDetailPage({
   proposalId,
   onNavigate,
 }: ProposalDetailPageProps) {
+  const { isFetching: actorFetching } = useActor();
   const { data: proposal, isLoading: proposalLoading } =
     useGetProposal(proposalId);
-  const { data: reviews, isLoading: reviewsLoading } =
-    useGetProposalReviews(proposalId);
+  const {
+    data: reviews,
+    isLoading: reviewsLoading,
+    isFetching: reviewsFetching,
+  } = useGetProposalReviews(proposalId);
   const { data: isReviewer } = useIsCallerReviewer();
   const { data: isAdmin } = useIsCallerAdmin();
   const { data: allReviewers } = useGetAllReviewers();
@@ -332,7 +337,7 @@ export default function ProposalDetailPage({
     }
   };
 
-  if (proposalLoading) {
+  if (actorFetching || proposalLoading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-8">
         <Skeleton className="h-8 w-32 mb-6 rounded-md" />
@@ -538,7 +543,10 @@ export default function ProposalDetailPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {reviewsLoading ? (
+            {actorFetching ||
+            reviewsLoading ||
+            reviewsFetching ||
+            reviews === undefined ? (
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
                   // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton

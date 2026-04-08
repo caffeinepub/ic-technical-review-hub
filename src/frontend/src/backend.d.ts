@@ -62,6 +62,7 @@ export interface ProposalWithCounts {
     adoptCount: bigint;
     timestamp: bigint;
     proposalId: bigint;
+    totalReviewCount: bigint;
 }
 export interface ReviewerDetail {
     paidReviews: bigint;

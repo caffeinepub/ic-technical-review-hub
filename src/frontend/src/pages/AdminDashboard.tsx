@@ -55,6 +55,8 @@ import {
   AlertCircle,
   Calendar,
   CheckCircle2,
+  ChevronFirst,
+  ChevronLast,
   Copy,
   Download,
   Edit,
@@ -499,7 +501,11 @@ function SettingsTab({ activeTab }: { activeTab: string }) {
 
 function AdminsTab({ activeTab }: { activeTab: string }) {
   const { identity } = useInternetIdentity();
-  const { data: admins, isLoading: adminsLoading } = useGetAllAdmins();
+  const {
+    data: admins,
+    isLoading: adminsLoading,
+    isFetching: adminsFetching,
+  } = useGetAllAdmins();
   const addAdmin = useAddAdmin();
   const removeAdmin = useRemoveAdmin();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -617,7 +623,7 @@ function AdminsTab({ activeTab }: { activeTab: string }) {
         </div>
       </CardHeader>
       <CardContent>
-        {adminsLoading ? (
+        {adminsLoading || adminsFetching || admins === undefined ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
@@ -685,6 +691,19 @@ function AdminsTab({ activeTab }: { activeTab: string }) {
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                        data-ocid="admins.pagination_first.button"
+                      >
+                        <ChevronFirst className="h-4 w-4" />
+                        <span className="sr-only">First page</span>
+                      </Button>
+                    </PaginationItem>
+                    <PaginationItem>
                       <PaginationPrevious
                         onClick={() =>
                           setCurrentPage((p) => Math.max(1, p - 1))
@@ -722,6 +741,19 @@ function AdminsTab({ activeTab }: { activeTab: string }) {
                         }
                         className={`cursor-pointer transition-all duration-200 rounded-md ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
                       />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                        data-ocid="admins.pagination_last.button"
+                      >
+                        <ChevronLast className="h-4 w-4" />
+                        <span className="sr-only">Last page</span>
+                      </Button>
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
@@ -852,7 +884,11 @@ function ReviewersTab({
   onNavigate,
   activeTab,
 }: { onNavigate: (page: Page) => void; activeTab: string }) {
-  const { data: allReviewers } = useGetAllReviewers();
+  const {
+    data: allReviewers,
+    isLoading: reviewersLoading,
+    isFetching: reviewersFetching,
+  } = useGetAllReviewers();
   const addReviewer = useAddOrUpdateReviewer();
   const updateReviewer = useUpdateReviewer();
   const removeReviewer = useRemoveReviewer();
@@ -1025,7 +1061,14 @@ function ReviewersTab({
         </div>
       </CardHeader>
       <CardContent>
-        {reviewers.length === 0 ? (
+        {reviewersLoading || reviewersFetching || allReviewers === undefined ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
+              <Skeleton key={i} className="h-14 w-full rounded-md" />
+            ))}
+          </div>
+        ) : reviewers.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No reviewers added yet
           </div>
@@ -1190,6 +1233,19 @@ function ReviewersTab({
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                        data-ocid="reviewers.pagination_first.button"
+                      >
+                        <ChevronFirst className="h-4 w-4" />
+                        <span className="sr-only">First page</span>
+                      </Button>
+                    </PaginationItem>
+                    <PaginationItem>
                       <PaginationPrevious
                         onClick={() =>
                           setCurrentPage((p) => Math.max(1, p - 1))
@@ -1227,6 +1283,19 @@ function ReviewersTab({
                         }
                         className={`cursor-pointer transition-all duration-200 rounded-md ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
                       />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                        data-ocid="reviewers.pagination_last.button"
+                      >
+                        <ChevronLast className="h-4 w-4" />
+                        <span className="sr-only">Last page</span>
+                      </Button>
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
@@ -1298,7 +1367,11 @@ function ReviewersTab({
 }
 
 function AssignmentsTab({ activeTab }: { activeTab: string }) {
-  const { data: allReviewers } = useGetAllReviewers();
+  const {
+    data: allReviewers,
+    isLoading: reviewersLoading,
+    isFetching: reviewersFetching,
+  } = useGetAllReviewers();
   const { data: allTopics } = useGetAllTopics();
   const assignReviewer = useAssignReviewerToTopic();
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
@@ -1486,7 +1559,14 @@ function AssignmentsTab({ activeTab }: { activeTab: string }) {
         </div>
       </CardHeader>
       <CardContent>
-        {reviewersWithAssignments.length === 0 ? (
+        {reviewersLoading || reviewersFetching || allReviewers === undefined ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
+              <Skeleton key={i} className="h-14 w-full rounded-md" />
+            ))}
+          </div>
+        ) : reviewersWithAssignments.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No paid grantee assignments created yet
           </div>
@@ -1539,6 +1619,19 @@ function AssignmentsTab({ activeTab }: { activeTab: string }) {
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                        data-ocid="assignments.pagination_first.button"
+                      >
+                        <ChevronFirst className="h-4 w-4" />
+                        <span className="sr-only">First page</span>
+                      </Button>
+                    </PaginationItem>
+                    <PaginationItem>
                       <PaginationPrevious
                         onClick={() =>
                           setCurrentPage((p) => Math.max(1, p - 1))
@@ -1576,6 +1669,19 @@ function AssignmentsTab({ activeTab }: { activeTab: string }) {
                         }
                         className={`cursor-pointer transition-all duration-200 rounded-md ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
                       />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                        data-ocid="assignments.pagination_last.button"
+                      >
+                        <ChevronLast className="h-4 w-4" />
+                        <span className="sr-only">Last page</span>
+                      </Button>
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
@@ -2350,6 +2456,19 @@ function ProposalsTab({ activeTab }: { activeTab: string }) {
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setCurrentPage(1)}
+                          disabled={currentPage === 1}
+                          className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                          data-ocid="proposals_sync.pagination_first.button"
+                        >
+                          <ChevronFirst className="h-4 w-4" />
+                          <span className="sr-only">First page</span>
+                        </Button>
+                      </PaginationItem>
+                      <PaginationItem>
                         <PaginationPrevious
                           onClick={() =>
                             setCurrentPage((p) => Math.max(1, p - 1))
@@ -2390,6 +2509,19 @@ function ProposalsTab({ activeTab }: { activeTab: string }) {
                           }
                           className={`cursor-pointer transition-all duration-200 rounded-md ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
                         />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setCurrentPage(totalPages)}
+                          disabled={currentPage === totalPages}
+                          className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                          data-ocid="proposals_sync.pagination_last.button"
+                        >
+                          <ChevronLast className="h-4 w-4" />
+                          <span className="sr-only">Last page</span>
+                        </Button>
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>

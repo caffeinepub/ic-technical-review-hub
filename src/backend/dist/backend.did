@@ -101,6 +101,7 @@ type ProposalWithCounts =
    timestamp: int;
    title: text;
    topic: nat;
+   totalReviewCount: nat;
  };
 type Proposal = 
  record {

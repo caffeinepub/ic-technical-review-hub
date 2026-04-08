@@ -19,6 +19,7 @@ export interface Proposal {
   topic: bigint;
   adoptCount?: bigint;
   rejectCount?: bigint;
+  reviewCount?: number;
 }
 
 export interface ReviewerSummary {

@@ -39,12 +39,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ExternalLink, Filter, X } from "lucide-react";
+import {
+  ChevronFirst,
+  ChevronLast,
+  ExternalLink,
+  Filter,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Page } from "../App";
+import { useActor } from "../hooks/useActor";
 import {
   useGetAllTopics,
-  useGetProposalReviewCount,
   useGetProposals,
   useGetReviewerPublicTable,
 } from "../hooks/useQueries";
@@ -57,14 +63,21 @@ interface HomePageProps {
 }
 
 export default function HomePage({ onNavigate }: HomePageProps) {
+  const { isFetching: actorFetching } = useActor();
   const [selectedTopicFilter, setSelectedTopicFilter] = useState<bigint | null>(
     null,
   );
-  const { data: proposals, isLoading: proposalsLoading } =
-    useGetProposals(selectedTopicFilter);
+  const {
+    data: proposals,
+    isLoading: proposalsLoading,
+    isFetching: proposalsFetching,
+  } = useGetProposals(selectedTopicFilter);
   const { data: allTopics } = useGetAllTopics();
-  const { data: reviewerTableData, isLoading: reviewerTableLoading } =
-    useGetReviewerPublicTable();
+  const {
+    data: reviewerTableData,
+    isLoading: reviewerTableLoading,
+    isFetching: reviewerTableFetching,
+  } = useGetReviewerPublicTable();
   const [proposalsPage, setProposalsPage] = useState(1);
   const [reviewerTablePage, setReviewerTablePage] = useState(1);
   const [showOnlyActiveGrantees, setShowOnlyActiveGrantees] = useState(false);
@@ -240,7 +253,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </div>
             </CardHeader>
             <CardContent>
-              {proposalsLoading ? (
+              {actorFetching ||
+              proposalsLoading ||
+              proposalsFetching ||
+              proposals === undefined ? (
                 <div className="space-y-3">
                   {[...Array(5)].map((_, i) => (
                     // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
@@ -308,6 +324,19 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                       <Pagination>
                         <PaginationContent>
                           <PaginationItem>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => setProposalsPage(1)}
+                              disabled={proposalsPage === 1}
+                              className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                              data-ocid="proposals.pagination_first.button"
+                            >
+                              <ChevronFirst className="h-4 w-4" />
+                              <span className="sr-only">First page</span>
+                            </Button>
+                          </PaginationItem>
+                          <PaginationItem>
                             <PaginationPrevious
                               onClick={() =>
                                 setProposalsPage((p) => Math.max(1, p - 1))
@@ -354,6 +383,21 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                               className={`cursor-pointer transition-all duration-200 ${proposalsPage === totalProposalsPages ? "pointer-events-none opacity-50" : ""}`}
                             />
                           </PaginationItem>
+                          <PaginationItem>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() =>
+                                setProposalsPage(totalProposalsPages)
+                              }
+                              disabled={proposalsPage === totalProposalsPages}
+                              className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                              data-ocid="proposals.pagination_last.button"
+                            >
+                              <ChevronLast className="h-4 w-4" />
+                              <span className="sr-only">Last page</span>
+                            </Button>
+                          </PaginationItem>
                         </PaginationContent>
                       </Pagination>
                     </div>
@@ -390,7 +434,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </div>
             </CardHeader>
             <CardContent>
-              {reviewerTableLoading ? (
+              {actorFetching ||
+              reviewerTableLoading ||
+              reviewerTableFetching ||
+              reviewerTableData === undefined ? (
                 <div className="space-y-3">
                   {[...Array(5)].map((_, i) => (
                     // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
@@ -595,6 +642,19 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                       <Pagination>
                         <PaginationContent>
                           <PaginationItem>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => setReviewerTablePage(1)}
+                              disabled={reviewerTablePage === 1}
+                              className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                              data-ocid="reviewers.pagination_first.button"
+                            >
+                              <ChevronFirst className="h-4 w-4" />
+                              <span className="sr-only">First page</span>
+                            </Button>
+                          </PaginationItem>
+                          <PaginationItem>
                             <PaginationPrevious
                               onClick={() =>
                                 setReviewerTablePage((p) => Math.max(1, p - 1))
@@ -641,6 +701,23 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                               className={`cursor-pointer transition-all duration-200 ${reviewerTablePage === totalReviewerTablePages ? "pointer-events-none opacity-50" : ""}`}
                             />
                           </PaginationItem>
+                          <PaginationItem>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() =>
+                                setReviewerTablePage(totalReviewerTablePages)
+                              }
+                              disabled={
+                                reviewerTablePage === totalReviewerTablePages
+                              }
+                              className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
+                              data-ocid="reviewers.pagination_last.button"
+                            >
+                              <ChevronLast className="h-4 w-4" />
+                              <span className="sr-only">Last page</span>
+                            </Button>
+                          </PaginationItem>
                         </PaginationContent>
                       </Pagination>
                     </div>
@@ -662,8 +739,7 @@ interface ProposalRowProps {
 }
 
 function ProposalRow({ proposal, onNavigate, rowIsOdd }: ProposalRowProps) {
-  const { data: reviewCount } = useGetProposalReviewCount(proposal.proposalId);
-
+  const reviewCount = proposal.reviewCount ?? 0;
   const adoptCount = proposal.adoptCount ? Number(proposal.adoptCount) : 0;
   const rejectCount = proposal.rejectCount ? Number(proposal.rejectCount) : 0;
 
@@ -700,7 +776,7 @@ function ProposalRow({ proposal, onNavigate, rowIsOdd }: ProposalRowProps) {
         </TableCell>
         <TableCell className="text-right py-5">
           <Badge variant="secondary" className="bg-muted text-foreground">
-            {reviewCount?.toString() || "0"}
+            {reviewCount}
           </Badge>
         </TableCell>
         <TableCell className="py-5">
@@ -729,8 +805,7 @@ function ProposalCard({
   proposal,
   onNavigate,
 }: { proposal: Proposal; onNavigate: (page: Page) => void }) {
-  const { data: reviewCount } = useGetProposalReviewCount(proposal.proposalId);
-
+  const reviewCount = proposal.reviewCount ?? 0;
   const adoptCount = proposal.adoptCount ? Number(proposal.adoptCount) : 0;
   const rejectCount = proposal.rejectCount ? Number(proposal.rejectCount) : 0;
 
@@ -752,7 +827,7 @@ function ProposalCard({
               variant="secondary"
               className="text-xs bg-muted text-foreground"
             >
-              {reviewCount?.toString() || "0"} reviews
+              {reviewCount} reviews
             </Badge>
           </div>
           <div className="font-medium text-foreground mb-2 break-words">

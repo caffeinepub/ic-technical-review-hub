@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { Page } from "../App";
+import { useActor } from "../hooks/useActor";
 import { useGetAuditLog, useGetAuditLogSize } from "../hooks/useQueries";
 import { AuditActionType } from "../lib/auditTypes";
 import type { AuditLogEntry } from "../lib/auditTypes";
@@ -96,6 +97,7 @@ interface AuditLogPageProps {
 }
 
 export default function AuditLogPage({ onNavigate }: AuditLogPageProps) {
+  const { isFetching: actorFetching } = useActor();
   const [page, setPage] = useState(0);
 
   const { data: entries, isLoading, isError } = useGetAuditLog(page, PAGE_SIZE);
@@ -131,7 +133,7 @@ export default function AuditLogPage({ onNavigate }: AuditLogPageProps) {
           <CardTitle className="text-lg">Audit Log</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {isLoading ? (
+          {actorFetching || isLoading ? (
             <div className="space-y-3 p-6">
               {[...Array(5)].map((_, i) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list

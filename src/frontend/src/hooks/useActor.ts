@@ -17,6 +17,20 @@ import type {
   UserRole,
 } from "../lib/domainTypes";
 
+/** Backend ProposalWithCounts — includes adoptCount, rejectCount, and totalReviewCount. */
+export interface BackendProposalWithCounts {
+  proposalId: bigint;
+  title: string;
+  timestamp: bigint;
+  deadline: bigint;
+  creationDate: bigint;
+  deadlineDate: bigint;
+  topic: bigint;
+  adoptCount: bigint;
+  rejectCount: bigint;
+  totalReviewCount: bigint;
+}
+
 /** Full typed interface for all backend canister methods. */
 export interface BackendActor {
   // User Profile
@@ -35,7 +49,9 @@ export interface BackendActor {
   setAuthorizedProposalSubmitter(principal: Principal | null): Promise<void>;
 
   // Proposals
-  getProposals(topicFilter: bigint | null): Promise<Proposal[]>;
+  getProposals(
+    topicFilter: bigint | null,
+  ): Promise<BackendProposalWithCounts[]>;
   getAllProposalIds(): Promise<bigint[]>;
   addProposal(
     id: bigint,

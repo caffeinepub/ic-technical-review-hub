@@ -32,6 +32,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Page } from "../App";
+import { useActor } from "../hooks/useActor";
 import {
   useGetReviewerAssignments,
   useGetReviewerDetail,
@@ -53,15 +54,22 @@ export default function ReviewerProfilePage({
   principal,
   onNavigate,
 }: ReviewerProfilePageProps) {
+  const { isFetching: actorFetching } = useActor();
   const reviewerPrincipal = Principal.fromText(principal);
   const { data: reviewerDetail, isLoading: reviewerLoading } =
     useGetReviewerDetail(reviewerPrincipal);
-  const { data: reviews, isLoading: reviewsLoading } =
-    useGetReviewerReviewHistory(reviewerPrincipal);
-  const { isLoading: assignmentsLoading } =
+  const {
+    data: reviews,
+    isLoading: reviewsLoading,
+    isFetching: reviewsFetching,
+  } = useGetReviewerReviewHistory(reviewerPrincipal);
+  const { isLoading: assignmentsLoading, isFetching: assignmentsFetching } =
     useGetReviewerAssignments(reviewerPrincipal);
-  const { data: todoProposals, isLoading: todosLoading } =
-    useGetReviewerTodos(reviewerPrincipal);
+  const {
+    data: todoProposals,
+    isLoading: todosLoading,
+    isFetching: todosFetching,
+  } = useGetReviewerTodos(reviewerPrincipal);
   const { data: missedProposals, isLoading: missedLoading } =
     useGetReviewerMissedProposals(reviewerPrincipal);
   const [activeTab, setActiveTab] = useState("history");
@@ -71,7 +79,7 @@ export default function ReviewerProfilePage({
   const [copied, setCopied] = useState(false);
   const itemsPerPage = 10;
 
-  if (reviewerLoading) {
+  if (actorFetching || reviewerLoading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-8">
         <Skeleton className="h-8 w-32 mb-6 rounded-md" />
@@ -294,7 +302,10 @@ export default function ReviewerProfilePage({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {reviewsLoading ? (
+                {actorFetching ||
+                reviewsLoading ||
+                reviewsFetching ||
+                reviews === undefined ? (
                   <div className="space-y-3">
                     {[...Array(5)].map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
@@ -390,7 +401,10 @@ export default function ReviewerProfilePage({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {todosLoading ? (
+                {actorFetching ||
+                todosLoading ||
+                todosFetching ||
+                todoProposals === undefined ? (
                   <div className="space-y-3">
                     {[...Array(5)].map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
@@ -559,7 +573,7 @@ export default function ReviewerProfilePage({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {assignmentsLoading ? (
+                {actorFetching || assignmentsLoading || assignmentsFetching ? (
                   <div className="space-y-3">
                     {[...Array(5)].map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
