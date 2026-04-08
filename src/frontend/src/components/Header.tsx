@@ -1,23 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Copy, Menu, Moon, Sun, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import type { Page } from "../App";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useGetReviewer, useIsCallerAdmin } from "../hooks/useQueries";
 
-interface HeaderProps {
-  currentPage: Page;
-  onNavigate: (page: Page) => void;
-}
-
-export default function Header({ currentPage, onNavigate }: HeaderProps) {
+export default function Header() {
   const { identity, clear, login, loginStatus } = useInternetIdentity();
   const { data: isAdmin } = useIsCallerAdmin();
   const queryClient = useQueryClient();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
+  const routerState = useRouterState();
   const [copied, setCopied] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -32,6 +29,8 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
 
   const reviewerPrincipal = identity ? identity.getPrincipal() : undefined;
   const { data: reviewer } = useGetReviewer(reviewerPrincipal);
+
+  const currentPath = routerState.location.pathname;
 
   // Close menu on outside click
   useEffect(() => {
@@ -55,11 +54,17 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [mobileMenuOpen]);
 
+  // Close mobile menu on route change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally reacts to route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [currentPath]);
+
   const handleAuth = async () => {
     if (isAuthenticated) {
       await clear();
       queryClient.clear();
-      onNavigate({ type: "home" });
+      navigate({ to: "/" });
       toast.success("Logged out successfully");
     } else {
       try {
@@ -91,14 +96,9 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
     }
   };
 
-  const handleMobileNav = (page: Page) => {
-    onNavigate(page);
-    setMobileMenuOpen(false);
-  };
-
-  const isHomeActive = currentPage.type === "home";
-  const isAuditLogActive = currentPage.type === "auditLog";
-  const isAdminActive = currentPage.type === "admin";
+  const isProposalsActive = currentPath === "/" || currentPath === "/proposals";
+  const isAuditLogActive = currentPath === "/audit-log";
+  const isAdminActive = currentPath === "/admin";
 
   const navTabClass = (active: boolean) =>
     `text-sm px-3 py-1.5 rounded-md border transition-all duration-200 ${
@@ -124,41 +124,37 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           <div className="flex items-center justify-between gap-4">
             {/* Left: Logo + Desktop Nav */}
             <div className="flex items-center gap-3 min-w-0">
-              <button
-                type="button"
-                onClick={() => onNavigate({ type: "home" })}
+              <Link
+                to="/"
                 className="text-xl font-bold text-foreground hover:text-primary transition-colors duration-200 shrink-0"
                 data-ocid="header.home.link"
               >
                 NNS Technical Review Hub
-              </button>
+              </Link>
 
               <nav className="hidden md:flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => onNavigate({ type: "home" })}
-                  className={navTabClass(isHomeActive)}
+                <Link
+                  to="/"
+                  className={navTabClass(isProposalsActive)}
                   data-ocid="header.proposals.tab"
                 >
                   Proposals
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigate({ type: "auditLog" })}
+                </Link>
+                <Link
+                  to="/audit-log"
                   className={navTabClass(isAuditLogActive)}
                   data-ocid="header.audit_log.tab"
                 >
                   Audit Log
-                </button>
+                </Link>
                 {isAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => onNavigate({ type: "admin" })}
+                  <Link
+                    to="/admin"
                     className={navTabClass(isAdminActive)}
                     data-ocid="header.admin.tab"
                   >
                     Admin
-                  </button>
+                  </Link>
                 )}
               </nav>
             </div>
@@ -251,31 +247,28 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             data-ocid="header.mobile_nav.menu"
           >
             <nav className="max-w-7xl mx-auto px-4 py-2 flex flex-col gap-1">
-              <button
-                type="button"
-                onClick={() => handleMobileNav({ type: "home" })}
-                className={mobileNavItemClass(isHomeActive)}
+              <Link
+                to="/"
+                className={mobileNavItemClass(isProposalsActive)}
                 data-ocid="header.mobile_proposals.tab"
               >
                 Proposals
-              </button>
-              <button
-                type="button"
-                onClick={() => handleMobileNav({ type: "auditLog" })}
+              </Link>
+              <Link
+                to="/audit-log"
                 className={mobileNavItemClass(isAuditLogActive)}
                 data-ocid="header.mobile_audit_log.tab"
               >
                 Audit Log
-              </button>
+              </Link>
               {isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => handleMobileNav({ type: "admin" })}
+                <Link
+                  to="/admin"
                   className={mobileNavItemClass(isAdminActive)}
                   data-ocid="header.mobile_admin.tab"
                 >
                   Admin
-                </button>
+                </Link>
               )}
 
               {/* Principal copy in mobile menu when authenticated */}
@@ -288,9 +281,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
                   )}
                   <button
                     type="button"
-                    onClick={() => {
-                      handleCopyPrincipal();
-                    }}
+                    onClick={handleCopyPrincipal}
                     className="flex items-center gap-2 w-full px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 group"
                     title="Click to copy full Principal ID"
                     data-ocid="header.mobile_copy_principal.button"

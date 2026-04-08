@@ -39,6 +39,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   ChevronFirst,
   ChevronLast,
@@ -47,26 +48,28 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { Page } from "../App";
 import { useActor } from "../hooks/useActor";
 import {
   useGetAllTopics,
   useGetProposals,
   useGetReviewerPublicTable,
 } from "../hooks/useQueries";
-import { formatDateTime, formatDateTimeShort } from "../lib/dateUtils";
+import { formatDateTime } from "../lib/dateUtils";
 import type { Proposal } from "../lib/domainTypes";
 import { topicIdToDisplayName } from "../lib/topicUtils";
 
-interface HomePageProps {
-  onNavigate: (page: Page) => void;
-}
+export default function HomePage() {
+  const navigate = useNavigate({ from: "/" });
+  const search = useSearch({ from: "/" });
 
-export default function HomePage({ onNavigate }: HomePageProps) {
+  const view = search.view ?? "proposals";
+  const topicParam = search.topic;
+  const proposalsPage = search.page ?? 1;
+  const showOnlyActiveGrantees = search.activeGranteesOnly ?? false;
+
+  const selectedTopicFilter = topicParam ? BigInt(topicParam) : null;
+
   const { isFetching: actorFetching } = useActor();
-  const [selectedTopicFilter, setSelectedTopicFilter] = useState<bigint | null>(
-    null,
-  );
   const {
     data: proposals,
     isLoading: proposalsLoading,
@@ -78,14 +81,16 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     isLoading: reviewerTableLoading,
     isFetching: reviewerTableFetching,
   } = useGetReviewerPublicTable();
-  const [proposalsPage, setProposalsPage] = useState(1);
-  const [reviewerTablePage, setReviewerTablePage] = useState(1);
-  const [showOnlyActiveGrantees, setShowOnlyActiveGrantees] = useState(false);
+
+  // Reviewer tab page is separate local state but also URL-synced via the page param
+  // Since there's only one `page` param and it's shared, we use local state for the reviewer
+  // tab page when viewing reviewers — URL tracks via the same `page` param with view=reviewers
+  const reviewerTablePage = view === "reviewers" ? proposalsPage : 1;
+
   const [noticeHidden, setNoticeHidden] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const itemsPerPage = 10;
 
-  // Load notice preference from localStorage
   useEffect(() => {
     const hideNotice = localStorage.getItem("hideNoticeBox");
     if (hideNotice === "true") {
@@ -101,31 +106,58 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   };
 
   const handleTopicFilterChange = (value: string) => {
-    if (value === "all") {
-      setSelectedTopicFilter(null);
-    } else {
-      setSelectedTopicFilter(BigInt(value));
-    }
-    setProposalsPage(1); // Reset to first page when filter changes
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        topic: value === "all" ? undefined : value,
+        page: undefined, // reset to page 1 (default = omit)
+      }),
+    });
+  };
+
+  const handleProposalsPageChange = (p: number) => {
+    navigate({ search: (prev) => ({ ...prev, page: p > 1 ? p : undefined }) });
+  };
+
+  const handleReviewerPageChange = (p: number) => {
+    navigate({ search: (prev) => ({ ...prev, page: p > 1 ? p : undefined }) });
+  };
+
+  const handleViewChange = (v: string) => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        view: v === "proposals" ? undefined : (v as "reviewers"),
+        page: undefined, // reset to page 1 (default = omit)
+      }),
+    });
+  };
+
+  const handleToggleActiveGrantees = () => {
+    const newVal = !showOnlyActiveGrantees;
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        activeGranteesOnly: newVal || undefined,
+        page: undefined, // reset to page 1 (default = omit)
+      }),
+    });
   };
 
   const sortedProposals = proposals
     ? [...proposals].sort((a, b) => Number(b.proposalId - a.proposalId))
     : [];
 
-  // Pagination for proposals
   const totalProposalsPages = Math.ceil(sortedProposals.length / itemsPerPage);
   const paginatedProposals = sortedProposals.slice(
     (proposalsPage - 1) * itemsPerPage,
     proposalsPage * itemsPerPage,
   );
 
-  // Filter and paginate reviewer table
   const filteredReviewerTable = (reviewerTableData || []).filter(
     ([_, __, type]) =>
       showOnlyActiveGrantees ? type === "Paid Grantee" : true,
   );
-
   const totalReviewerTablePages = Math.ceil(
     filteredReviewerTable.length / itemsPerPage,
   );
@@ -184,7 +216,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
         </div>
       )}
 
-      <Tabs defaultValue="proposals" className="space-y-6">
+      <Tabs value={view} onValueChange={handleViewChange} className="space-y-6">
         <TabsList className="bg-transparent border-0 p-0 gap-3">
           <TabsTrigger
             value="proposals"
@@ -299,7 +331,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                             <ProposalRow
                               key={proposal.proposalId.toString()}
                               proposal={proposal}
-                              onNavigate={onNavigate}
                               rowIsOdd={index % 2 === 0}
                             />
                           ))}
@@ -314,7 +345,6 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                       <ProposalCard
                         key={proposal.proposalId.toString()}
                         proposal={proposal}
-                        onNavigate={onNavigate}
                       />
                     ))}
                   </div>
@@ -327,7 +357,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => setProposalsPage(1)}
+                              onClick={() => handleProposalsPageChange(1)}
                               disabled={proposalsPage === 1}
                               className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
                               data-ocid="proposals.pagination_first.button"
@@ -339,7 +369,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                           <PaginationItem>
                             <PaginationPrevious
                               onClick={() =>
-                                setProposalsPage((p) => Math.max(1, p - 1))
+                                handleProposalsPageChange(
+                                  Math.max(1, proposalsPage - 1),
+                                )
                               }
                               className={`cursor-pointer transition-all duration-200 ${proposalsPage === 1 ? "pointer-events-none opacity-50" : ""}`}
                             />
@@ -363,7 +395,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                               return (
                                 <PaginationItem key={page}>
                                   <PaginationLink
-                                    onClick={() => setProposalsPage(page)}
+                                    onClick={() =>
+                                      handleProposalsPageChange(page)
+                                    }
                                     isActive={proposalsPage === page}
                                     className="cursor-pointer transition-all duration-200"
                                   >
@@ -376,8 +410,11 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                           <PaginationItem>
                             <PaginationNext
                               onClick={() =>
-                                setProposalsPage((p) =>
-                                  Math.min(totalProposalsPages, p + 1),
+                                handleProposalsPageChange(
+                                  Math.min(
+                                    totalProposalsPages,
+                                    proposalsPage + 1,
+                                  ),
                                 )
                               }
                               className={`cursor-pointer transition-all duration-200 ${proposalsPage === totalProposalsPages ? "pointer-events-none opacity-50" : ""}`}
@@ -388,7 +425,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                               variant="outline"
                               size="icon"
                               onClick={() =>
-                                setProposalsPage(totalProposalsPages)
+                                handleProposalsPageChange(totalProposalsPages)
                               }
                               disabled={proposalsPage === totalProposalsPages}
                               className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
@@ -422,10 +459,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 <Button
                   variant={showOnlyActiveGrantees ? "default" : "outline"}
                   size="sm"
-                  onClick={() => {
-                    setShowOnlyActiveGrantees(!showOnlyActiveGrantees);
-                    setReviewerTablePage(1);
-                  }}
+                  onClick={handleToggleActiveGrantees}
                   className="transition-all duration-200 flex items-center gap-2"
                 >
                   <Filter className="h-4 w-4" />
@@ -486,67 +520,15 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                                 });
 
                               return (
-                                <TableRow
+                                <ReviewerRow
                                   key={principal.toString()}
-                                  className={`table-row-hover border-b border-border ${index % 2 === 0 ? "table-row-odd" : "table-row-even"}`}
-                                  onClick={() =>
-                                    onNavigate({
-                                      type: "reviewer",
-                                      principal: principal.toString(),
-                                    })
-                                  }
-                                >
-                                  <TableCell className="py-5">
-                                    <div
-                                      className={
-                                        type === "Paid Grantee"
-                                          ? "font-bold text-primary"
-                                          : "font-medium"
-                                      }
-                                    >
-                                      {reviewer.nickname}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="py-5">
-                                    <Badge
-                                      variant={
-                                        type === "Paid Grantee"
-                                          ? "default"
-                                          : "secondary"
-                                      }
-                                      className="bg-muted text-foreground"
-                                    >
-                                      {type}
-                                    </Badge>
-                                  </TableCell>
-                                  <TableCell className="py-5">
-                                    {hasActiveAssignments ? (
-                                      <div className="flex flex-wrap gap-1.5">
-                                        {assignments
-                                          .filter(([_, assignment]) => {
-                                            const now = Date.now() * 1_000_000;
-                                            return (
-                                              now >=
-                                                Number(assignment.startDate) &&
-                                              now <= Number(assignment.endDate)
-                                            );
-                                          })
-                                          .map(([topicId]) => (
-                                            <span
-                                              key={topicId.toString()}
-                                              className="topic-pill"
-                                            >
-                                              {topicIdToDisplayName(topicId)}
-                                            </span>
-                                          ))}
-                                      </div>
-                                    ) : (
-                                      <span className="text-sm text-muted-foreground">
-                                        No active grant assignments
-                                      </span>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
+                                  principal={principal.toString()}
+                                  reviewer={reviewer}
+                                  type={type}
+                                  assignments={assignments}
+                                  hasActiveAssignments={hasActiveAssignments}
+                                  rowIsOdd={index % 2 === 0}
+                                />
                               );
                             },
                           )}
@@ -570,68 +552,14 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                           });
 
                         return (
-                          <button
-                            type="button"
+                          <ReviewerCard
                             key={principal.toString()}
-                            onClick={() =>
-                              onNavigate({
-                                type: "reviewer",
-                                principal: principal.toString(),
-                              })
-                            }
-                            className="w-full text-left p-4 border border-border rounded-lg hover:bg-accent transition-all duration-200 space-y-3"
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div
-                                className={
-                                  type === "Paid Grantee"
-                                    ? "font-bold text-primary text-lg"
-                                    : "font-medium text-lg"
-                                }
-                              >
-                                {reviewer.nickname}
-                              </div>
-                              <Badge
-                                variant={
-                                  type === "Paid Grantee"
-                                    ? "default"
-                                    : "secondary"
-                                }
-                                className="bg-muted text-foreground"
-                              >
-                                {type}
-                              </Badge>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-muted-foreground mb-2">
-                                Assigned Topics:
-                              </div>
-                              {hasActiveAssignments ? (
-                                <div className="flex flex-wrap gap-1.5">
-                                  {assignments
-                                    .filter(([_, assignment]) => {
-                                      const now = Date.now() * 1_000_000;
-                                      return (
-                                        now >= Number(assignment.startDate) &&
-                                        now <= Number(assignment.endDate)
-                                      );
-                                    })
-                                    .map(([topicId]) => (
-                                      <span
-                                        key={topicId.toString()}
-                                        className="topic-pill"
-                                      >
-                                        {topicIdToDisplayName(topicId)}
-                                      </span>
-                                    ))}
-                                </div>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">
-                                  No active grant assignments
-                                </span>
-                              )}
-                            </div>
-                          </button>
+                            principal={principal.toString()}
+                            reviewer={reviewer}
+                            type={type}
+                            assignments={assignments}
+                            hasActiveAssignments={hasActiveAssignments}
+                          />
                         );
                       },
                     )}
@@ -645,7 +573,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => setReviewerTablePage(1)}
+                              onClick={() => handleReviewerPageChange(1)}
                               disabled={reviewerTablePage === 1}
                               className="h-9 w-9 rounded-md cursor-pointer transition-all duration-200"
                               data-ocid="reviewers.pagination_first.button"
@@ -657,7 +585,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                           <PaginationItem>
                             <PaginationPrevious
                               onClick={() =>
-                                setReviewerTablePage((p) => Math.max(1, p - 1))
+                                handleReviewerPageChange(
+                                  Math.max(1, reviewerTablePage - 1),
+                                )
                               }
                               className={`cursor-pointer transition-all duration-200 ${reviewerTablePage === 1 ? "pointer-events-none opacity-50" : ""}`}
                             />
@@ -681,7 +611,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                               return (
                                 <PaginationItem key={page}>
                                   <PaginationLink
-                                    onClick={() => setReviewerTablePage(page)}
+                                    onClick={() =>
+                                      handleReviewerPageChange(page)
+                                    }
                                     isActive={reviewerTablePage === page}
                                     className="cursor-pointer transition-all duration-200"
                                   >
@@ -694,8 +626,11 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                           <PaginationItem>
                             <PaginationNext
                               onClick={() =>
-                                setReviewerTablePage((p) =>
-                                  Math.min(totalReviewerTablePages, p + 1),
+                                handleReviewerPageChange(
+                                  Math.min(
+                                    totalReviewerTablePages,
+                                    reviewerTablePage + 1,
+                                  ),
                                 )
                               }
                               className={`cursor-pointer transition-all duration-200 ${reviewerTablePage === totalReviewerTablePages ? "pointer-events-none opacity-50" : ""}`}
@@ -706,7 +641,9 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                               variant="outline"
                               size="icon"
                               onClick={() =>
-                                setReviewerTablePage(totalReviewerTablePages)
+                                handleReviewerPageChange(
+                                  totalReviewerTablePages,
+                                )
                               }
                               disabled={
                                 reviewerTablePage === totalReviewerTablePages
@@ -734,11 +671,11 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
 interface ProposalRowProps {
   proposal: Proposal;
-  onNavigate: (page: Page) => void;
   rowIsOdd: boolean;
 }
 
-function ProposalRow({ proposal, onNavigate, rowIsOdd }: ProposalRowProps) {
+function ProposalRow({ proposal, rowIsOdd }: ProposalRowProps) {
+  const navigate = useNavigate();
   const reviewCount = proposal.reviewCount ?? 0;
   const adoptCount = proposal.adoptCount ? Number(proposal.adoptCount) : 0;
   const rejectCount = proposal.rejectCount ? Number(proposal.rejectCount) : 0;
@@ -748,7 +685,10 @@ function ProposalRow({ proposal, onNavigate, rowIsOdd }: ProposalRowProps) {
       <TableRow
         className={`table-row-hover border-b border-border ${rowIsOdd ? "table-row-odd" : "table-row-even"}`}
         onClick={() =>
-          onNavigate({ type: "proposal", proposalId: proposal.proposalId })
+          navigate({
+            to: "/proposal/$proposalId",
+            params: { proposalId: proposal.proposalId.toString() },
+          })
         }
       >
         <TableCell className="font-mono text-sm py-5">
@@ -801,10 +741,8 @@ function ProposalRow({ proposal, onNavigate, rowIsOdd }: ProposalRowProps) {
   );
 }
 
-function ProposalCard({
-  proposal,
-  onNavigate,
-}: { proposal: Proposal; onNavigate: (page: Page) => void }) {
+function ProposalCard({ proposal }: { proposal: Proposal }) {
+  const navigate = useNavigate();
   const reviewCount = proposal.reviewCount ?? 0;
   const adoptCount = proposal.adoptCount ? Number(proposal.adoptCount) : 0;
   const rejectCount = proposal.rejectCount ? Number(proposal.rejectCount) : 0;
@@ -813,7 +751,10 @@ function ProposalCard({
     <button
       type="button"
       onClick={() =>
-        onNavigate({ type: "proposal", proposalId: proposal.proposalId })
+        navigate({
+          to: "/proposal/$proposalId",
+          params: { proposalId: proposal.proposalId.toString() },
+        })
       }
       className="w-full text-left p-4 border border-border rounded-lg hover:bg-accent transition-all duration-200 space-y-3"
     >
@@ -857,3 +798,146 @@ function ProposalCard({
     </button>
   );
 }
+
+// Reviewer table row and card extracted to avoid repeating navigate logic
+interface ReviewerDisplayProps {
+  principal: string;
+  reviewer: { nickname: string };
+  type: string;
+  assignments: [bigint, { startDate: bigint; endDate: bigint }][];
+  hasActiveAssignments: boolean;
+}
+
+function ReviewerRow({
+  principal,
+  reviewer,
+  type,
+  assignments,
+  hasActiveAssignments,
+  rowIsOdd,
+}: ReviewerDisplayProps & { rowIsOdd: boolean }) {
+  const navigate = useNavigate();
+  return (
+    <TableRow
+      className={`table-row-hover border-b border-border ${rowIsOdd ? "table-row-odd" : "table-row-even"}`}
+      onClick={() =>
+        navigate({
+          to: "/reviewer/$principal",
+          params: { principal },
+          search: {},
+        })
+      }
+    >
+      <TableCell className="py-5">
+        <div
+          className={
+            type === "Paid Grantee" ? "font-bold text-primary" : "font-medium"
+          }
+        >
+          {reviewer.nickname}
+        </div>
+      </TableCell>
+      <TableCell className="py-5">
+        <Badge
+          variant={type === "Paid Grantee" ? "default" : "secondary"}
+          className="bg-muted text-foreground"
+        >
+          {type}
+        </Badge>
+      </TableCell>
+      <TableCell className="py-5">
+        {hasActiveAssignments ? (
+          <div className="flex flex-wrap gap-1.5">
+            {assignments
+              .filter(([_, assignment]) => {
+                const now = Date.now() * 1_000_000;
+                return (
+                  now >= Number(assignment.startDate) &&
+                  now <= Number(assignment.endDate)
+                );
+              })
+              .map(([topicId]) => (
+                <span key={topicId.toString()} className="topic-pill">
+                  {topicIdToDisplayName(topicId)}
+                </span>
+              ))}
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">
+            No active grant assignments
+          </span>
+        )}
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function ReviewerCard({
+  principal,
+  reviewer,
+  type,
+  assignments,
+  hasActiveAssignments,
+}: ReviewerDisplayProps) {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        navigate({
+          to: "/reviewer/$principal",
+          params: { principal },
+          search: {},
+        })
+      }
+      className="w-full text-left p-4 border border-border rounded-lg hover:bg-accent transition-all duration-200 space-y-3"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div
+          className={
+            type === "Paid Grantee"
+              ? "font-bold text-primary text-lg"
+              : "font-medium text-lg"
+          }
+        >
+          {reviewer.nickname}
+        </div>
+        <Badge
+          variant={type === "Paid Grantee" ? "default" : "secondary"}
+          className="bg-muted text-foreground"
+        >
+          {type}
+        </Badge>
+      </div>
+      <div>
+        <div className="text-sm font-medium text-muted-foreground mb-2">
+          Assigned Topics:
+        </div>
+        {hasActiveAssignments ? (
+          <div className="flex flex-wrap gap-1.5">
+            {assignments
+              .filter(([_, assignment]) => {
+                const now = Date.now() * 1_000_000;
+                return (
+                  now >= Number(assignment.startDate) &&
+                  now <= Number(assignment.endDate)
+                );
+              })
+              .map(([topicId]) => (
+                <span key={topicId.toString()} className="topic-pill">
+                  {topicIdToDisplayName(topicId)}
+                </span>
+              ))}
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">
+            No active grant assignments
+          </span>
+        )}
+      </div>
+    </button>
+  );
+}
+
+// Keep formatDateTime import used in the page
+export { formatDateTime };

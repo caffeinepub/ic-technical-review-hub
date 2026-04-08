@@ -20,6 +20,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Principal } from "@dfinity/principal";
 import {
+  useNavigate,
+  useParams,
+  useRouter,
+  useSearch,
+} from "@tanstack/react-router";
+import {
   AlertCircle,
   ArrowLeft,
   Award,
@@ -31,7 +37,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { Page } from "../App";
 import { useActor } from "../hooks/useActor";
 import {
   useGetReviewerAssignments,
@@ -42,20 +47,129 @@ import {
 } from "../hooks/useQueries";
 import { formatDateTime } from "../lib/dateUtils";
 import { Recommendation } from "../lib/domainTypes";
-import type { Proposal, Review } from "../lib/domainTypes";
+import type { Review } from "../lib/domainTypes";
 import { topicIdToDisplayName } from "../lib/topicUtils";
 
-interface ReviewerProfilePageProps {
-  principal: string;
-  onNavigate: (page: Page) => void;
+export default function ReviewerProfilePage() {
+  const { principal } = useParams({ from: "/reviewer/$principal" });
+  const search = useSearch({ from: "/reviewer/$principal" });
+  const navigate = useNavigate({ from: "/reviewer/$principal" });
+  const router = useRouter();
+
+  const activeTab = search.tab ?? "history";
+  const reviewsPage = search.reviewPage ?? 1;
+  const todoPage = search.todoPage ?? 1;
+  const assignmentsPage = search.assignmentPage ?? 1;
+
+  const setActiveTab = (tab: string) => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        tab: tab === "history" ? undefined : (tab as "todos" | "assignments"),
+      }),
+    });
+  };
+  const setReviewsPage = (p: number) => {
+    navigate({
+      search: (prev) => ({ ...prev, reviewPage: p > 1 ? p : undefined }),
+    });
+  };
+  const setTodoPage = (p: number) => {
+    navigate({
+      search: (prev) => ({ ...prev, todoPage: p > 1 ? p : undefined }),
+    });
+  };
+  const setAssignmentsPage = (p: number) => {
+    navigate({
+      search: (prev) => ({ ...prev, assignmentPage: p > 1 ? p : undefined }),
+    });
+  };
+
+  const { isFetching: actorFetching } = useActor();
+  const [copied, setCopied] = useState(false);
+  const itemsPerPage = 10;
+
+  // Validate principal format
+  let reviewerPrincipal: Principal;
+  try {
+    reviewerPrincipal = Principal.fromText(principal);
+  } catch {
+    return (
+      <div className="container mx-auto px-4 sm:px-6 py-8">
+        <Button
+          variant="outline"
+          onClick={() => navigate({ to: "/" })}
+          className="mb-6 rounded-md transition-all duration-200 border-border hover:bg-accent"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <Card className="rounded-lg border-border">
+          <CardContent className="py-12 text-center text-muted-foreground">
+            Reviewer not found
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <ReviewerProfileContent
+      principal={principal}
+      reviewerPrincipal={reviewerPrincipal}
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      reviewsPage={reviewsPage}
+      setReviewsPage={setReviewsPage}
+      todoPage={todoPage}
+      setTodoPage={setTodoPage}
+      assignmentsPage={assignmentsPage}
+      setAssignmentsPage={setAssignmentsPage}
+      actorFetching={actorFetching}
+      copied={copied}
+      setCopied={setCopied}
+      itemsPerPage={itemsPerPage}
+      router={router}
+      navigate={navigate}
+    />
+  );
 }
 
-export default function ReviewerProfilePage({
+function ReviewerProfileContent({
   principal,
-  onNavigate,
-}: ReviewerProfilePageProps) {
-  const { isFetching: actorFetching } = useActor();
-  const reviewerPrincipal = Principal.fromText(principal);
+  reviewerPrincipal,
+  activeTab,
+  setActiveTab,
+  reviewsPage,
+  setReviewsPage,
+  todoPage,
+  setTodoPage,
+  assignmentsPage,
+  setAssignmentsPage,
+  actorFetching,
+  copied,
+  setCopied,
+  itemsPerPage,
+  router,
+  navigate,
+}: {
+  principal: string;
+  reviewerPrincipal: Principal;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  reviewsPage: number;
+  setReviewsPage: (p: number) => void;
+  todoPage: number;
+  setTodoPage: (p: number) => void;
+  assignmentsPage: number;
+  setAssignmentsPage: (p: number) => void;
+  actorFetching: boolean;
+  copied: boolean;
+  setCopied: (v: boolean) => void;
+  itemsPerPage: number;
+  router: ReturnType<typeof useRouter>;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
   const { data: reviewerDetail, isLoading: reviewerLoading } =
     useGetReviewerDetail(reviewerPrincipal);
   const {
@@ -72,12 +186,10 @@ export default function ReviewerProfilePage({
   } = useGetReviewerTodos(reviewerPrincipal);
   const { data: missedProposals, isLoading: missedLoading } =
     useGetReviewerMissedProposals(reviewerPrincipal);
-  const [activeTab, setActiveTab] = useState("history");
-  const [reviewsPage, setReviewsPage] = useState(1);
-  const [todoPage, setTodoPage] = useState(1);
-  const [assignmentsPage, setAssignmentsPage] = useState(1);
-  const [copied, setCopied] = useState(false);
-  const itemsPerPage = 10;
+
+  const handleBack = () => {
+    router.history.back();
+  };
 
   if (actorFetching || reviewerLoading) {
     return (
@@ -93,7 +205,7 @@ export default function ReviewerProfilePage({
       <div className="container mx-auto px-4 sm:px-6 py-8">
         <Button
           variant="outline"
-          onClick={() => onNavigate({ type: "home" })}
+          onClick={handleBack}
           className="mb-6 rounded-md transition-all duration-200 border-border hover:bg-accent"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -113,7 +225,6 @@ export default function ReviewerProfilePage({
   const volunteerReviews = Number(reviewerDetail.voluntaryReviews);
   const totalReviews = Number(reviewerDetail.totalReviews);
 
-  // Determine current reviewer status
   let reviewerStatus = "Volunteer";
   let hasActiveAssignment = false;
   let activeAssignment: { topic: bigint; endDate: bigint } | null = null;
@@ -121,7 +232,6 @@ export default function ReviewerProfilePage({
   if (reviewerDetail.status === "paidGrantee") {
     reviewerStatus = "Paid Grantee";
     hasActiveAssignment = true;
-    // Get the first active assignment for display
     if (reviewerDetail.currentAssignments.length > 0) {
       const [topic, assignment] = reviewerDetail.currentAssignments[0];
       activeAssignment = { topic, endDate: assignment.endDate };
@@ -154,9 +264,7 @@ export default function ReviewerProfilePage({
     try {
       await navigator.clipboard.writeText(principal);
       setCopied(true);
-      toast.success("Principal copied!", {
-        duration: 2000,
-      });
+      toast.success("Principal copied!", { duration: 2000 });
       setTimeout(() => setCopied(false), 2000);
     } catch (_error) {
       toast.error("Failed to copy Principal ID");
@@ -167,7 +275,7 @@ export default function ReviewerProfilePage({
     <div className="container mx-auto px-4 sm:px-6 py-8">
       <Button
         variant="outline"
-        onClick={() => onNavigate({ type: "home" })}
+        onClick={handleBack}
         className="mb-6 rounded-md transition-all duration-200 border-border hover:bg-accent"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
@@ -266,13 +374,13 @@ export default function ReviewerProfilePage({
           <TabsList className="bg-transparent border-0 p-0 gap-3 grid w-full grid-cols-3">
             <TabsTrigger
               value="history"
-              className="data-[state=inactive]:bg-transparent data-[state=inactive]:text-[#888888] data-[state=inactive]:border-0 data-[state=active]:bg-[#2A2A2A] data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-white hover:border-white hover:text-[#AAAAAA] rounded-md transition-all duration-200 dark:data-[state=active]:bg-[#2A2A2A] dark:data-[state=active]:text-white dark:data-[state=active]:border-white light:data-[state=active]:bg-[#F3F4F6] light:data-[state=active]:text-[#1A1A1A] light:data-[state=active]:border-[#1A1A1A]"
+              className="data-[state=inactive]:bg-transparent data-[state=inactive]:text-[#888888] data-[state=inactive]:border-0 data-[state=active]:bg-[#2A2A2A] data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-white hover:border-white hover:text-[#AAAAAA] rounded-md transition-all duration-200"
             >
               Review History
             </TabsTrigger>
             <TabsTrigger
               value="todos"
-              className="data-[state=inactive]:bg-transparent data-[state=inactive]:text-[#888888] data-[state=inactive]:border-0 data-[state=active]:bg-[#2A2A2A] data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-white hover:border-white hover:text-[#AAAAAA] rounded-md transition-all duration-200 dark:data-[state=active]:bg-[#2A2A2A] dark:data-[state=active]:text-white dark:data-[state=active]:border-white light:data-[state=active]:bg-[#F3F4F6] light:data-[state=active]:text-[#1A1A1A] light:data-[state=active]:border-[#1A1A1A] relative"
+              className="data-[state=inactive]:bg-transparent data-[state=inactive]:text-[#888888] data-[state=inactive]:border-0 data-[state=active]:bg-[#2A2A2A] data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-white hover:border-white hover:text-[#AAAAAA] rounded-md transition-all duration-200 relative"
             >
               Review TODOs
               {todoProposals && todoProposals.length > 0 && (
@@ -286,7 +394,7 @@ export default function ReviewerProfilePage({
             </TabsTrigger>
             <TabsTrigger
               value="assignments"
-              className="data-[state=inactive]:bg-transparent data-[state=inactive]:text-[#888888] data-[state=inactive]:border-0 data-[state=active]:bg-[#2A2A2A] data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-white hover:border-white hover:text-[#AAAAAA] rounded-md transition-all duration-200 dark:data-[state=active]:bg-[#2A2A2A] dark:data-[state=active]:text-white dark:data-[state=active]:border-white light:data-[state=active]:bg-[#F3F4F6] light:data-[state=active]:text-[#1A1A1A] light:data-[state=active]:border-[#1A1A1A]"
+              className="data-[state=inactive]:bg-transparent data-[state=inactive]:text-[#888888] data-[state=inactive]:border-0 data-[state=active]:bg-[#2A2A2A] data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-white hover:border-white hover:text-[#AAAAAA] rounded-md transition-all duration-200"
             >
               Grant History
             </TabsTrigger>
@@ -323,7 +431,7 @@ export default function ReviewerProfilePage({
                         // biome-ignore lint/suspicious/noArrayIndexKey: no stable review key
                         <div key={index}>
                           {index > 0 && <Separator className="my-4" />}
-                          <ReviewItem review={review} onNavigate={onNavigate} />
+                          <ReviewItem review={review} navigate={navigate} />
                         </div>
                       ))}
                     </div>
@@ -334,7 +442,7 @@ export default function ReviewerProfilePage({
                             <PaginationItem>
                               <PaginationPrevious
                                 onClick={() =>
-                                  setReviewsPage((p) => Math.max(1, p - 1))
+                                  setReviewsPage(Math.max(1, reviewsPage - 1))
                                 }
                                 className={`cursor-pointer transition-all duration-200 rounded-md ${reviewsPage === 1 ? "pointer-events-none opacity-50" : ""}`}
                               />
@@ -371,8 +479,11 @@ export default function ReviewerProfilePage({
                             <PaginationItem>
                               <PaginationNext
                                 onClick={() =>
-                                  setReviewsPage((p) =>
-                                    Math.min(totalReviewsPages, p + 1),
+                                  setReviewsPage(
+                                    Math.min(
+                                      totalReviewsPages,
+                                      reviewsPage + 1,
+                                    ),
                                   )
                                 }
                                 className={`cursor-pointer transition-all duration-200 rounded-md ${reviewsPage === totalReviewsPages ? "pointer-events-none opacity-50" : ""}`}
@@ -423,9 +534,11 @@ export default function ReviewerProfilePage({
                           type="button"
                           key={proposal.proposalId.toString()}
                           onClick={() =>
-                            onNavigate({
-                              type: "proposal",
-                              proposalId: proposal.proposalId,
+                            navigate({
+                              to: "/proposal/$proposalId",
+                              params: {
+                                proposalId: proposal.proposalId.toString(),
+                              },
                             })
                           }
                           className="w-full text-left p-3 border border-border rounded-lg hover:bg-accent transition-all duration-200 bg-card"
@@ -452,7 +565,7 @@ export default function ReviewerProfilePage({
                             <PaginationItem>
                               <PaginationPrevious
                                 onClick={() =>
-                                  setTodoPage((p) => Math.max(1, p - 1))
+                                  setTodoPage(Math.max(1, todoPage - 1))
                                 }
                                 className={`cursor-pointer transition-all duration-200 rounded-md ${todoPage === 1 ? "pointer-events-none opacity-50" : ""}`}
                               />
@@ -486,8 +599,8 @@ export default function ReviewerProfilePage({
                             <PaginationItem>
                               <PaginationNext
                                 onClick={() =>
-                                  setTodoPage((p) =>
-                                    Math.min(totalTodoPages, p + 1),
+                                  setTodoPage(
+                                    Math.min(totalTodoPages, todoPage + 1),
                                   )
                                 }
                                 className={`cursor-pointer transition-all duration-200 rounded-md ${todoPage === totalTodoPages ? "pointer-events-none opacity-50" : ""}`}
@@ -530,9 +643,11 @@ export default function ReviewerProfilePage({
                           type="button"
                           key={proposal.proposalId.toString()}
                           onClick={() =>
-                            onNavigate({
-                              type: "proposal",
-                              proposalId: proposal.proposalId,
+                            navigate({
+                              to: "/proposal/$proposalId",
+                              params: {
+                                proposalId: proposal.proposalId.toString(),
+                              },
                             })
                           }
                           className="w-full text-left p-3 border border-border rounded-lg hover:bg-accent transition-all duration-200"
@@ -631,7 +746,9 @@ export default function ReviewerProfilePage({
                             <PaginationItem>
                               <PaginationPrevious
                                 onClick={() =>
-                                  setAssignmentsPage((p) => Math.max(1, p - 1))
+                                  setAssignmentsPage(
+                                    Math.max(1, assignmentsPage - 1),
+                                  )
                                 }
                                 className={`cursor-pointer transition-all duration-200 rounded-md ${assignmentsPage === 1 ? "pointer-events-none opacity-50" : ""}`}
                               />
@@ -668,8 +785,11 @@ export default function ReviewerProfilePage({
                             <PaginationItem>
                               <PaginationNext
                                 onClick={() =>
-                                  setAssignmentsPage((p) =>
-                                    Math.min(totalAssignmentsPages, p + 1),
+                                  setAssignmentsPage(
+                                    Math.min(
+                                      totalAssignmentsPages,
+                                      assignmentsPage + 1,
+                                    ),
                                   )
                                 }
                                 className={`cursor-pointer transition-all duration-200 rounded-md ${assignmentsPage === totalAssignmentsPages ? "pointer-events-none opacity-50" : ""}`}
@@ -692,8 +812,11 @@ export default function ReviewerProfilePage({
 
 function ReviewItem({
   review,
-  onNavigate,
-}: { review: Review; onNavigate: (page: Page) => void }) {
+  navigate,
+}: {
+  review: Review;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
   return (
     <div className="space-y-2">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -701,7 +824,10 @@ function ReviewItem({
           <button
             type="button"
             onClick={() =>
-              onNavigate({ type: "proposal", proposalId: review.proposalId })
+              navigate({
+                to: "/proposal/$proposalId",
+                params: { proposalId: review.proposalId.toString() },
+              })
             }
             className="font-medium text-foreground hover:underline text-left transition-colors duration-200"
           >

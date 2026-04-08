@@ -51,6 +51,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Principal } from "@dfinity/principal";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   AlertCircle,
   Calendar,
@@ -70,7 +71,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { Page } from "../App";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
   useAddAdmin,
@@ -95,10 +95,6 @@ import { formatDateTime, formatDateTimeShort } from "../lib/dateUtils";
 import type { Proposal, Reviewer } from "../lib/domainTypes";
 import { topicIdToDisplayName, topicStringToId } from "../lib/topicUtils";
 
-interface AdminDashboardProps {
-  onNavigate: (page: Page) => void;
-}
-
 interface ICProposal {
   proposal_id: string;
   title: string;
@@ -111,9 +107,25 @@ interface ProposalWithStatus extends ICProposal {
   isAlreadyStored: boolean;
 }
 
-export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
+export default function AdminDashboard() {
+  const navigate = useNavigate({ from: "/admin" });
+  const search = useSearch({ from: "/admin" });
+  const activeTab = search.tab ?? "admins";
+
+  const setActiveTab = (tab: string) => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        tab:
+          tab === "admins"
+            ? undefined
+            : (tab as "reviewers" | "assignments" | "proposals" | "settings"),
+        page: undefined, // reset to page 1 (default = omit)
+      }),
+    });
+  };
+
   const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
-  const [activeTab, setActiveTab] = useState("admins");
 
   if (adminLoading) {
     return (
@@ -143,7 +155,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               You need admin privileges to access this page.
             </p>
             <Button
-              onClick={() => onNavigate({ type: "home" })}
+              onClick={() => navigate({ to: "/" })}
               className="mt-4 rounded-md transition-all duration-200"
             >
               Go to Home
@@ -208,7 +220,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         </TabsContent>
 
         <TabsContent value="reviewers">
-          <ReviewersTab onNavigate={onNavigate} activeTab={activeTab} />
+          <ReviewersTab activeTab={activeTab} />
         </TabsContent>
 
         <TabsContent value="assignments">
@@ -501,11 +513,7 @@ function SettingsTab({ activeTab }: { activeTab: string }) {
 
 function AdminsTab({ activeTab }: { activeTab: string }) {
   const { identity } = useInternetIdentity();
-  const {
-    data: admins,
-    isLoading: adminsLoading,
-    isFetching: adminsFetching,
-  } = useGetAllAdmins();
+  const { data: admins, isLoading: adminsLoading } = useGetAllAdmins();
   const addAdmin = useAddAdmin();
   const removeAdmin = useRemoveAdmin();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -623,7 +631,7 @@ function AdminsTab({ activeTab }: { activeTab: string }) {
         </div>
       </CardHeader>
       <CardContent>
-        {adminsLoading || adminsFetching || admins === undefined ? (
+        {adminsLoading || admins === undefined ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
@@ -784,28 +792,37 @@ function AdminRow({
     <TableRow className="border-b border-[#1A1A1A]">
       <TableCell>
         <div className="space-y-1">
-          {reviewer && (
-            <div className="font-medium text-foreground">
-              {reviewer.nickname}
-            </div>
-          )}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-mono text-sm text-foreground">
+              {principalStr.slice(0, 10)}...{principalStr.slice(-6)}
+            </span>
             <CopyablePrincipal principal={principalStr} />
             {isCurrentUser && (
-              <Badge variant="outline" className="text-xs rounded-md">
+              <Badge
+                variant="outline"
+                className="text-xs rounded-md flex-shrink-0"
+              >
                 You
               </Badge>
             )}
           </div>
-          {reviewer?.forumProfileUrl && (
-            <a
-              href={reviewer.forumProfileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-primary hover:underline transition-colors duration-200"
-            >
-              Forum Profile
-            </a>
+          {reviewer && (
+            <div className="text-xs text-muted-foreground">
+              {reviewer.nickname}
+              {reviewer.forumProfileUrl && (
+                <>
+                  {" · "}
+                  <a
+                    href={reviewer.forumProfileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline transition-colors duration-200"
+                  >
+                    Forum Profile
+                  </a>
+                </>
+              )}
+            </div>
           )}
         </div>
       </TableCell>
@@ -842,28 +859,37 @@ function AdminCard({
     <div className="p-4 border border-[#1A1A1A] rounded-lg space-y-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0 space-y-1">
-          {reviewer && (
-            <div className="font-medium text-foreground">
-              {reviewer.nickname}
-            </div>
-          )}
           <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-mono text-sm text-foreground">
+              {principalStr.slice(0, 10)}...{principalStr.slice(-6)}
+            </span>
             <CopyablePrincipal principal={principalStr} />
             {isCurrentUser && (
-              <Badge variant="outline" className="text-xs rounded-md">
+              <Badge
+                variant="outline"
+                className="text-xs rounded-md flex-shrink-0"
+              >
                 You
               </Badge>
             )}
           </div>
-          {reviewer?.forumProfileUrl && (
-            <a
-              href={reviewer.forumProfileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-primary hover:underline transition-colors duration-200 inline-block"
-            >
-              Forum Profile
-            </a>
+          {reviewer && (
+            <div className="text-xs text-muted-foreground">
+              {reviewer.nickname}
+              {reviewer.forumProfileUrl && (
+                <>
+                  {" · "}
+                  <a
+                    href={reviewer.forumProfileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline transition-colors duration-200 inline-block"
+                  >
+                    Forum Profile
+                  </a>
+                </>
+              )}
+            </div>
           )}
         </div>
         <Button
@@ -880,10 +906,8 @@ function AdminCard({
   );
 }
 
-function ReviewersTab({
-  onNavigate,
-  activeTab,
-}: { onNavigate: (page: Page) => void; activeTab: string }) {
+function ReviewersTab({ activeTab }: { activeTab: string }) {
+  const navigate = useNavigate();
   const {
     data: allReviewers,
     isLoading: reviewersLoading,
@@ -1105,9 +1129,12 @@ function ReviewersTab({
                             <button
                               type="button"
                               onClick={() =>
-                                onNavigate({
-                                  type: "reviewer",
-                                  principal: reviewer.principal.toString(),
+                                navigate({
+                                  to: "/reviewer/$principal",
+                                  params: {
+                                    principal: reviewer.principal.toString(),
+                                  },
+                                  search: {},
                                 })
                               }
                               className="hover:underline truncate max-w-[120px] block transition-colors duration-200"
@@ -1116,7 +1143,7 @@ function ReviewersTab({
                             </button>
                           </TableCell>
                           <TableCell>
-                            <CopyablePrincipal principal={principalStr} />
+                            <CopyablePrincipal principal={principalStr} />{" "}
                           </TableCell>
                           <TableCell>
                             {reviewer.forumProfileUrl ? (
@@ -1180,9 +1207,12 @@ function ReviewersTab({
                         <button
                           type="button"
                           onClick={() =>
-                            onNavigate({
-                              type: "reviewer",
-                              principal: reviewer.principal.toString(),
+                            navigate({
+                              to: "/reviewer/$principal",
+                              params: {
+                                principal: reviewer.principal.toString(),
+                              },
+                              search: {},
                             })
                           }
                           className="font-medium hover:underline transition-colors duration-200 text-left"

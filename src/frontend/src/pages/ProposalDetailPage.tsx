@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Principal } from "@dfinity/principal";
+import { useNavigate, useParams, useRouter } from "@tanstack/react-router";
 import {
   AlertCircle,
   ArrowLeft,
@@ -50,7 +51,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { Page } from "../App";
 import { useActor } from "../hooks/useActor";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
@@ -70,15 +70,55 @@ import { FixReviewStatusResult, Recommendation } from "../lib/domainTypes";
 import type { Review } from "../lib/domainTypes";
 import { topicIdToDisplayName } from "../lib/topicUtils";
 
-interface ProposalDetailPageProps {
-  proposalId: bigint;
-  onNavigate: (page: Page) => void;
+export default function ProposalDetailPage() {
+  const { proposalId: proposalIdStr } = useParams({
+    from: "/proposal/$proposalId",
+  });
+  const router = useRouter();
+  const navigate = useNavigate();
+
+  // Parse proposalId defensively
+  let proposalId: bigint;
+  try {
+    proposalId = BigInt(proposalIdStr);
+  } catch {
+    return (
+      <div className="container mx-auto px-4 sm:px-6 py-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate({ to: "/" })}
+          className="mb-6 rounded-md transition-all duration-200"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Proposals
+        </Button>
+        <Card className="rounded-lg">
+          <CardContent className="py-12 text-center text-muted-foreground">
+            Proposal not found
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <ProposalDetailContent
+      proposalId={proposalId}
+      router={router}
+      navigate={navigate}
+    />
+  );
 }
 
-export default function ProposalDetailPage({
+function ProposalDetailContent({
   proposalId,
-  onNavigate,
-}: ProposalDetailPageProps) {
+  router,
+  navigate,
+}: {
+  proposalId: bigint;
+  router: ReturnType<typeof useRouter>;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
   const { isFetching: actorFetching } = useActor();
   const { data: proposal, isLoading: proposalLoading } =
     useGetProposal(proposalId);
@@ -162,8 +202,9 @@ export default function ProposalDetailPage({
       toast.success("Review submitted successfully");
       setReviewLink("");
       setRecommendation("");
-    } catch (error: any) {
-      const errorMessage = error.message || "Failed to submit review";
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { message?: string }).message || "Failed to submit review";
       if (errorMessage.includes("deadline")) {
         toast.error("Review initial deadline for this proposal has passed");
       } else if (errorMessage.includes("Admins are not permitted")) {
@@ -206,8 +247,11 @@ export default function ProposalDetailPage({
         toast.error("Invalid proposal");
       }
       handleCloseFixDialog();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to fix review status");
+    } catch (error: unknown) {
+      toast.error(
+        (error as { message?: string }).message ||
+          "Failed to fix review status",
+      );
     }
   };
 
@@ -242,8 +286,10 @@ export default function ProposalDetailPage({
       });
       toast.success("Review link updated successfully");
       handleCloseEditDialog();
-    } catch (error: any) {
-      const errorMessage = error.message || "Failed to update review link";
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { message?: string }).message ||
+        "Failed to update review link";
       if (errorMessage.includes("Unauthorized")) {
         toast.error("Only admins can update review links");
       } else {
@@ -278,8 +324,10 @@ export default function ProposalDetailPage({
       });
       toast.success("Review removed successfully");
       handleCloseRemoveDialog();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to remove review");
+    } catch (error: unknown) {
+      toast.error(
+        (error as { message?: string }).message || "Failed to remove review",
+      );
     }
   };
 
@@ -332,9 +380,15 @@ export default function ProposalDetailPage({
       });
       toast.success("Review added on behalf of reviewer");
       handleCloseAddReviewDialog();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add review");
+    } catch (error: unknown) {
+      toast.error(
+        (error as { message?: string }).message || "Failed to add review",
+      );
     }
+  };
+
+  const handleBack = () => {
+    router.history.back();
   };
 
   if (actorFetching || proposalLoading) {
@@ -351,7 +405,7 @@ export default function ProposalDetailPage({
       <div className="container mx-auto px-4 sm:px-6 py-8">
         <Button
           variant="ghost"
-          onClick={() => onNavigate({ type: "home" })}
+          onClick={() => navigate({ to: "/" })}
           className="mb-6 rounded-md transition-all duration-200"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -373,19 +427,19 @@ export default function ProposalDetailPage({
     <div className="container mx-auto px-4 sm:px-6 py-8">
       <Button
         variant="ghost"
-        onClick={() => onNavigate({ type: "home" })}
+        onClick={handleBack}
         className="mb-6 rounded-md transition-all duration-200"
         data-ocid="proposal_detail.back.button"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Proposals
+        Back
       </Button>
 
       <div className="space-y-6">
         <Card className="border-border rounded-lg">
           <CardHeader className="pb-4">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-              <div className="space-y-2 flex-1">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 min-w-0">
+              <div className="space-y-2 flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-mono text-muted-foreground">
                     #{proposal.proposalId.toString()}
@@ -404,11 +458,11 @@ export default function ProposalDetailPage({
                   </div>
                 </CardDescription>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+              <div className="flex flex-col md:flex-row gap-2 w-full lg:w-auto flex-shrink-0">
                 <Button
                   asChild
                   variant="outline"
-                  className="rounded-md transition-all duration-200 border-border hover:bg-accent hover:shadow-md w-full sm:w-auto"
+                  className="rounded-md transition-all duration-200 border-border hover:bg-accent hover:shadow-md w-full md:w-auto"
                 >
                   <a href={nnsUrl} target="_blank" rel="noopener noreferrer">
                     Vote on NNS <ExternalLink className="h-4 w-4 ml-2" />
@@ -417,7 +471,7 @@ export default function ProposalDetailPage({
                 <Button
                   asChild
                   variant="outline"
-                  className="rounded-md transition-all duration-200 border-border hover:bg-accent hover:shadow-md w-full sm:w-auto"
+                  className="rounded-md transition-all duration-200 border-border hover:bg-accent hover:shadow-md w-full md:w-auto"
                 >
                   <a
                     href={dashboardUrl}
@@ -572,7 +626,6 @@ export default function ProposalDetailPage({
                     </div>
                     <ReviewTable
                       reviews={paidReviews}
-                      onNavigate={onNavigate}
                       isAdmin={isAdmin || false}
                       onFixStatus={handleOpenFixDialog}
                       onEditLink={handleOpenEditDialog}
@@ -590,7 +643,6 @@ export default function ProposalDetailPage({
                     </div>
                     <ReviewTable
                       reviews={volunteerReviews}
-                      onNavigate={onNavigate}
                       isAdmin={isAdmin || false}
                       onFixStatus={handleOpenFixDialog}
                       onEditLink={handleOpenEditDialog}
@@ -915,7 +967,6 @@ export default function ProposalDetailPage({
 
 interface ReviewTableProps {
   reviews: Review[];
-  onNavigate: (page: Page) => void;
   isAdmin: boolean;
   onFixStatus: (review: Review) => void;
   onEditLink: (review: Review) => void;
@@ -924,12 +975,13 @@ interface ReviewTableProps {
 
 function ReviewTable({
   reviews,
-  onNavigate,
   isAdmin,
   onFixStatus,
   onEditLink,
   onRemove,
 }: ReviewTableProps) {
+  const navigate = useNavigate();
+
   return (
     <>
       {/* Desktop Table View */}
@@ -967,9 +1019,12 @@ function ReviewTable({
                     <button
                       type="button"
                       onClick={() =>
-                        onNavigate({
-                          type: "reviewer",
-                          principal: review.reviewer.principal.toString(),
+                        navigate({
+                          to: "/reviewer/$principal",
+                          params: {
+                            principal: review.reviewer.principal.toString(),
+                          },
+                          search: {},
                         })
                       }
                       className="font-medium text-foreground hover:underline transition-colors duration-200"
@@ -1020,7 +1075,6 @@ function ReviewTable({
                           variant="outline"
                           size="sm"
                           onClick={() => onFixStatus(review)}
-                          disabled={false}
                           className="rounded-md transition-all duration-200 border-border hover:bg-accent hover:shadow-md text-xs"
                           data-ocid={`proposal_detail.fix_status.button.${index + 1}`}
                         >
@@ -1059,9 +1113,12 @@ function ReviewTable({
                 <button
                   type="button"
                   onClick={() =>
-                    onNavigate({
-                      type: "reviewer",
-                      principal: review.reviewer.principal.toString(),
+                    navigate({
+                      to: "/reviewer/$principal",
+                      params: {
+                        principal: review.reviewer.principal.toString(),
+                      },
+                      search: {},
                     })
                   }
                   className="font-medium text-foreground hover:underline transition-colors duration-200"

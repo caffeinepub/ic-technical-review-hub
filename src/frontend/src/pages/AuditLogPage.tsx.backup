@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   AlertTriangle,
   ArrowRight,
@@ -18,6 +18,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { useState } from "react";
+import type { Page } from "../App";
 import { useActor } from "../hooks/useActor";
 import { useGetAuditLog, useGetAuditLogSize } from "../hooks/useQueries";
 import { AuditActionType } from "../lib/auditTypes";
@@ -27,18 +29,13 @@ import { formatDateTime } from "../lib/dateUtils";
 const PAGE_SIZE = 10;
 
 function truncatePrincipal(p: string): string {
-  if (p.length <= 12) return p;
-  return `${p.slice(0, 9)}...`;
+  if (p.length <= 15) return p;
+  return `${p.slice(0, 8)}...${p.slice(-5)}`;
 }
 
 function truncateTitle(title: string, max = 40): string {
   if (title.length <= max) return title;
   return `${title.slice(0, max)}…`;
-}
-
-function truncateUrl(url: string, max = 36): string {
-  if (url.length <= max) return url;
-  return `${url.slice(0, max)}…`;
 }
 
 function actionLabel(type: AuditActionType): string {
@@ -48,74 +45,29 @@ function actionLabel(type: AuditActionType): string {
     case AuditActionType.removeReview:
       return "Removed Review";
     case AuditActionType.editReviewLink:
-      return "Edited Link";
+      return "Edited Review Link";
     case AuditActionType.fixReviewStatus:
-      return "Fixed Status";
+      return "Fixed Review Status";
     default:
       return String(type);
   }
 }
 
-function ActionBadge({ type }: { type: AuditActionType }) {
-  const baseClass =
-    "text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap inline-block border";
-
+function actionBadgeVariant(
+  type: AuditActionType,
+): "default" | "secondary" | "destructive" | "outline" {
   switch (type) {
     case AuditActionType.addReview:
-      return (
-        <span
-          className={`${baseClass} dark:bg-green-900/50 dark:text-green-300 dark:border-green-700 bg-green-100 text-green-800 border-green-300`}
-        >
-          Added Review
-        </span>
-      );
+      return "default";
     case AuditActionType.removeReview:
-      return (
-        <span
-          className={`${baseClass} dark:bg-red-900/50 dark:text-red-300 dark:border-red-700 bg-red-100 text-red-800 border-red-300`}
-        >
-          Removed Review
-        </span>
-      );
+      return "destructive";
     case AuditActionType.editReviewLink:
-      return (
-        <span
-          className={`${baseClass} dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700 bg-blue-100 text-blue-800 border-blue-300`}
-        >
-          Edited Link
-        </span>
-      );
+      return "outline";
     case AuditActionType.fixReviewStatus:
-      return (
-        <span
-          className={`${baseClass} dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-600 bg-gray-100 text-gray-700 border-gray-300`}
-        >
-          Fixed Status
-        </span>
-      );
+      return "secondary";
     default:
-      return (
-        <span
-          className={`${baseClass} dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-600 bg-gray-100 text-gray-700 border-gray-300`}
-        >
-          {actionLabel(type)}
-        </span>
-      );
+      return "outline";
   }
-}
-
-function UrlLink({ url }: { url: string }) {
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={url}
-      className="text-xs underline underline-offset-2 text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 break-all"
-    >
-      {truncateUrl(url)}
-    </a>
-  );
 }
 
 function DetailsCell({ entry }: { entry: AuditLogEntry }) {
@@ -123,46 +75,33 @@ function DetailsCell({ entry }: { entry: AuditLogEntry }) {
   const after = entry.afterValue;
 
   if (!before && !after)
-    return <span className="text-muted-foreground text-xs">—</span>;
-
-  const isUrl = (val: string) =>
-    val.startsWith("http://") || val.startsWith("https://");
+    return <span className="text-muted-foreground">—</span>;
 
   if (before && after) {
     return (
-      <span className="text-xs flex flex-col gap-1">
-        <span className="line-through text-muted-foreground">
-          {isUrl(before) ? <UrlLink url={before} /> : before}
-        </span>
-        <span className="flex items-center gap-1 text-muted-foreground">
-          <ArrowRight className="h-3 w-3 shrink-0" />
-        </span>
-        <span>{isUrl(after) ? <UrlLink url={after} /> : after}</span>
+      <span className="text-xs">
+        <span className="line-through text-muted-foreground">{before}</span>{" "}
+        <ArrowRight className="inline h-3 w-3 mx-0.5 text-muted-foreground" />{" "}
+        <span>{after}</span>
       </span>
     );
   }
 
-  const val = before ?? after ?? "";
-  return isUrl(val) ? (
-    <UrlLink url={val} />
-  ) : (
-    <span className="text-xs text-muted-foreground">{val}</span>
+  return (
+    <span className="text-xs text-muted-foreground">{before ?? after}</span>
   );
 }
 
-export default function AuditLogPage() {
-  const { isFetching: actorFetching } = useActor();
-  const navigate = useNavigate({ from: "/audit-log" });
-  const search = useSearch({ from: "/audit-log" });
-  const page = search.page ?? 0;
+interface AuditLogPageProps {
+  onNavigate: (page: Page) => void;
+}
 
-  const setPage = (p: number) => {
-    navigate({ search: (prev) => ({ ...prev, page: p > 0 ? p : undefined }) });
-  };
+export default function AuditLogPage({ onNavigate }: AuditLogPageProps) {
+  const { isFetching: actorFetching } = useActor();
+  const [page, setPage] = useState(0);
 
   const { data: entries, isLoading, isError } = useGetAuditLog(page, PAGE_SIZE);
   const { data: totalSize } = useGetAuditLogSize();
-  const auditNavigate = useNavigate();
 
   const totalPages = totalSize ? Math.ceil(Number(totalSize) / PAGE_SIZE) : 0;
 
@@ -219,50 +158,29 @@ export default function AuditLogPage() {
           ) : (
             <>
               {/* Desktop Table */}
-              <div className="mobile-card-table w-full overflow-hidden">
-                <Table style={{ tableLayout: "fixed", width: "100%" }}>
+              <div className="mobile-card-table overflow-x-auto">
+                <Table>
                   <TableHeader>
-                    <TableRow className="border-b border-border hover:bg-transparent sticky top-0 z-10 dark:bg-[#141414] bg-white">
-                      <TableHead
-                        className="text-foreground"
-                        style={{ width: "13%" }}
-                      >
+                    <TableRow className="border-b border-border hover:bg-transparent">
+                      <TableHead className="text-foreground w-40 min-w-[160px]">
                         Date / Time
                       </TableHead>
-                      <TableHead
-                        className="text-foreground"
-                        style={{ width: "12%" }}
-                      >
+                      <TableHead className="text-foreground w-44 min-w-[160px]">
                         Action
                       </TableHead>
-                      <TableHead
-                        className="text-foreground"
-                        style={{ width: "18%" }}
-                      >
+                      <TableHead className="text-foreground min-w-[180px]">
                         Proposal
                       </TableHead>
-                      <TableHead
-                        className="text-foreground"
-                        style={{ width: "14%" }}
-                      >
+                      <TableHead className="text-foreground min-w-[120px]">
                         Reviewer
                       </TableHead>
-                      <TableHead
-                        className="text-foreground"
-                        style={{ width: "14%" }}
-                      >
+                      <TableHead className="text-foreground min-w-[140px]">
                         Admin
                       </TableHead>
-                      <TableHead
-                        className="text-foreground"
-                        style={{ width: "14%" }}
-                      >
+                      <TableHead className="text-foreground min-w-[180px]">
                         Comment
                       </TableHead>
-                      <TableHead
-                        className="text-foreground"
-                        style={{ width: "15%" }}
-                      >
+                      <TableHead className="text-foreground min-w-[180px]">
                         Details
                       </TableHead>
                     </TableRow>
@@ -276,71 +194,56 @@ export default function AuditLogPage() {
                         }`}
                         data-ocid={`audit_log.item.${index + 1}`}
                       >
-                        <TableCell className="text-xs text-muted-foreground align-top py-3">
-                          <span className="whitespace-nowrap">
-                            {formatDateTime(entry.timestamp)}
-                          </span>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {formatDateTime(entry.timestamp)}
                         </TableCell>
-                        <TableCell className="align-top py-3">
-                          <ActionBadge type={entry.actionType} />
+                        <TableCell>
+                          <Badge
+                            variant={actionBadgeVariant(entry.actionType)}
+                            className="text-xs rounded-full"
+                          >
+                            {actionLabel(entry.actionType)}
+                          </Badge>
                         </TableCell>
-                        <TableCell className="text-xs align-top py-3 overflow-hidden">
+                        <TableCell className="text-sm">
                           <button
                             type="button"
                             onClick={() =>
-                              auditNavigate({
-                                to: "/proposal/$proposalId",
-                                params: {
-                                  proposalId: entry.proposalId.toString(),
-                                },
+                              onNavigate({
+                                type: "proposal",
+                                proposalId: entry.proposalId,
                               })
                             }
-                            className="text-foreground hover:underline transition-colors text-left w-full"
+                            className="text-foreground hover:underline transition-colors"
                             title={entry.proposalTitle}
                           >
-                            <span className="font-medium">
-                              #{entry.proposalId.toString()}
-                            </span>{" "}
-                            <span className="text-muted-foreground truncate block">
-                              {truncateTitle(entry.proposalTitle, 35)}
+                            #{entry.proposalId.toString()}{" "}
+                            <span className="text-muted-foreground">
+                              {truncateTitle(entry.proposalTitle)}
                             </span>
                           </button>
                         </TableCell>
-                        <TableCell className="text-xs align-top py-3 overflow-hidden">
+                        <TableCell className="text-sm font-medium">
                           <button
                             type="button"
                             onClick={() =>
-                              auditNavigate({
-                                to: "/reviewer/$principal",
-                                params: {
-                                  principal: entry.reviewerPrincipal.toString(),
-                                },
-                                search: {},
+                              onNavigate({
+                                type: "reviewer",
+                                principal: entry.reviewerPrincipal.toString(),
                               })
                             }
-                            className="text-foreground hover:underline transition-colors font-medium truncate block w-full text-left"
+                            className="text-foreground hover:underline transition-colors"
                           >
                             {entry.reviewerNickname}
                           </button>
                         </TableCell>
-                        <TableCell className="text-xs font-mono text-muted-foreground align-top py-3 overflow-hidden">
-                          {" "}
-                          <span
-                            title={entry.adminPrincipal.toString()}
-                            className="truncate block"
-                          >
-                            {truncatePrincipal(entry.adminPrincipal.toString())}
-                          </span>
+                        <TableCell className="text-xs font-mono text-muted-foreground">
+                          {truncatePrincipal(entry.adminPrincipal.toString())}
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground align-top py-3 overflow-hidden">
-                          <span
-                            title={entry.comment}
-                            className="line-clamp-3 block"
-                          >
-                            {entry.comment}
-                          </span>
+                        <TableCell className="text-sm text-muted-foreground max-w-[200px]">
+                          <span title={entry.comment}>{entry.comment}</span>
                         </TableCell>
-                        <TableCell className="align-top py-3 overflow-hidden">
+                        <TableCell>
                           <DetailsCell entry={entry} />
                         </TableCell>
                       </TableRow>
@@ -358,7 +261,12 @@ export default function AuditLogPage() {
                     data-ocid={`audit_log.item.${index + 1}`}
                   >
                     <div className="flex items-start justify-between gap-2 flex-wrap">
-                      <ActionBadge type={entry.actionType} />
+                      <Badge
+                        variant={actionBadgeVariant(entry.actionType)}
+                        className="text-xs rounded-full"
+                      >
+                        {actionLabel(entry.actionType)}
+                      </Badge>
                       <span className="text-xs text-muted-foreground">
                         {formatDateTime(entry.timestamp)}
                       </span>
@@ -367,14 +275,12 @@ export default function AuditLogPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          auditNavigate({
-                            to: "/proposal/$proposalId",
-                            params: {
-                              proposalId: entry.proposalId.toString(),
-                            },
+                          onNavigate({
+                            type: "proposal",
+                            proposalId: entry.proposalId,
                           })
                         }
-                        className="text-foreground hover:underline text-left"
+                        className="text-foreground hover:underline"
                       >
                         #{entry.proposalId.toString()}{" "}
                         <span className="text-muted-foreground">
@@ -388,12 +294,9 @@ export default function AuditLogPage() {
                         <button
                           type="button"
                           onClick={() =>
-                            auditNavigate({
-                              to: "/reviewer/$principal",
-                              params: {
-                                principal: entry.reviewerPrincipal.toString(),
-                              },
-                              search: {},
+                            onNavigate({
+                              type: "reviewer",
+                              principal: entry.reviewerPrincipal.toString(),
                             })
                           }
                           className="font-medium text-foreground hover:underline"
@@ -403,10 +306,7 @@ export default function AuditLogPage() {
                       </span>
                       <span>
                         Admin:{" "}
-                        <span
-                          className="font-mono"
-                          title={entry.adminPrincipal.toString()}
-                        >
+                        <span className="font-mono">
                           {truncatePrincipal(entry.adminPrincipal.toString())}
                         </span>
                       </span>
@@ -449,7 +349,7 @@ export default function AuditLogPage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setPage(page - 1)}
+                  onClick={() => setPage((p) => p - 1)}
                   disabled={!canPrev}
                   className="h-8 w-8 rounded-md"
                   data-ocid="audit_log.pagination_prev.button"
@@ -460,7 +360,7 @@ export default function AuditLogPage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setPage(page + 1)}
+                  onClick={() => setPage((p) => p + 1)}
                   disabled={!canNext}
                   className="h-8 w-8 rounded-md"
                   data-ocid="audit_log.pagination_next.button"
