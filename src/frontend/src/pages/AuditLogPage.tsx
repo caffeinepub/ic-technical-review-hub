@@ -195,10 +195,10 @@ export default function AuditLogPage() {
         </CardHeader>
         <CardContent className="p-0">
           {actorFetching || isLoading ? (
-            <div className="space-y-3 p-6">
-              {[...Array(5)].map((_, i) => (
+            <div className="space-y-2 p-6">
+              {[...Array(10)].map((_, i) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-                <Skeleton key={i} className="h-14 w-full rounded-md" />
+                <Skeleton key={i} className="h-12 w-full rounded-md" />
               ))}
             </div>
           ) : isError ? (

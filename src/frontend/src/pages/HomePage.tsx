@@ -289,10 +289,10 @@ export default function HomePage() {
               proposalsLoading ||
               proposalsFetching ||
               proposals === undefined ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
+                <div className="space-y-2">
+                  {[...Array(10)].map((_, i) => (
                     // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-                    <Skeleton key={i} className="h-16 w-full" />
+                    <Skeleton key={i} className="h-12 w-full" />
                   ))}
                 </div>
               ) : sortedProposals.length === 0 ? (
@@ -472,10 +472,10 @@ export default function HomePage() {
               reviewerTableLoading ||
               reviewerTableFetching ||
               reviewerTableData === undefined ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
+                <div className="space-y-2">
+                  {[...Array(10)].map((_, i) => (
                     // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-                    <Skeleton key={i} className="h-16 w-full" />
+                    <Skeleton key={i} className="h-12 w-full" />
                   ))}
                 </div>
               ) : filteredReviewerTable.length === 0 ? (

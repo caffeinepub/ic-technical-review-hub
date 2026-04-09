@@ -394,8 +394,16 @@ function ProposalDetailContent({
   if (actorFetching || proposalLoading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-8">
-        <Skeleton className="h-8 w-32 mb-6 rounded-md" />
-        <Skeleton className="h-64 w-full rounded-lg" />
+        <Skeleton className="h-9 w-24 mb-6 rounded-md" />
+        <div className="space-y-4">
+          <Skeleton className="h-40 w-full rounded-lg" />
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -601,10 +609,10 @@ function ProposalDetailContent({
             reviewsLoading ||
             reviewsFetching ||
             reviews === undefined ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {[...Array(5)].map((_, i) => (
                   // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton
-                  <Skeleton key={i} className="h-20 w-full rounded-md" />
+                  <Skeleton key={i} className="h-12 w-full rounded-md" />
                 ))}
               </div>
             ) : reviews && reviews.length === 0 ? (

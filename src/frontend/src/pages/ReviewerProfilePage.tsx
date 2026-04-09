@@ -194,8 +194,16 @@ function ReviewerProfileContent({
   if (actorFetching || reviewerLoading) {
     return (
       <div className="container mx-auto px-4 sm:px-6 py-8">
-        <Skeleton className="h-8 w-32 mb-6 rounded-md" />
-        <Skeleton className="h-64 w-full rounded-lg" />
+        <Skeleton className="h-9 w-24 mb-6 rounded-md" />
+        <div className="space-y-4">
+          <Skeleton className="h-36 w-full rounded-lg" />
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -414,10 +422,10 @@ function ReviewerProfileContent({
                 reviewsLoading ||
                 reviewsFetching ||
                 reviews === undefined ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {[...Array(5)].map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-                      <Skeleton key={i} className="h-20 w-full rounded-md" />
+                      <Skeleton key={i} className="h-12 w-full rounded-md" />
                     ))}
                   </div>
                 ) : reviews && reviews.length === 0 ? (
@@ -516,10 +524,10 @@ function ReviewerProfileContent({
                 todosLoading ||
                 todosFetching ||
                 todoProposals === undefined ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {[...Array(5)].map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-                      <Skeleton key={i} className="h-14 w-full rounded-md" />
+                      <Skeleton key={i} className="h-12 w-full rounded-md" />
                     ))}
                   </div>
                 ) : todoProposals && todoProposals.length === 0 ? (
@@ -630,10 +638,10 @@ function ReviewerProfileContent({
                 </CardHeader>
                 <CardContent>
                   {missedLoading ? (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {[...Array(3)].map((_, i) => (
                         // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-                        <Skeleton key={i} className="h-14 w-full rounded-md" />
+                        <Skeleton key={i} className="h-12 w-full rounded-md" />
                       ))}
                     </div>
                   ) : (
@@ -689,10 +697,10 @@ function ReviewerProfileContent({
               </CardHeader>
               <CardContent>
                 {actorFetching || assignmentsLoading || assignmentsFetching ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {[...Array(5)].map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-                      <Skeleton key={i} className="h-14 w-full rounded-md" />
+                      <Skeleton key={i} className="h-12 w-full rounded-md" />
                     ))}
                   </div>
                 ) : reviewerDetail.allAssignments &&

@@ -133,10 +133,10 @@ export default function AdminDashboard() {
         <div className="space-y-4">
           <Skeleton className="h-10 w-48 rounded-md" />
           <Skeleton className="h-5 w-72 rounded-md" />
-          <div className="space-y-3 pt-4">
+          <div className="space-y-2 pt-4">
             {[...Array(5)].map((_, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-              <Skeleton key={i} className="h-14 w-full rounded-md" />
+              <Skeleton key={i} className="h-12 w-full rounded-md" />
             ))}
           </div>
         </div>
@@ -632,10 +632,10 @@ function AdminsTab({ activeTab }: { activeTab: string }) {
       </CardHeader>
       <CardContent>
         {adminsLoading || admins === undefined ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-              <Skeleton key={i} className="h-14 w-full rounded-md" />
+              <Skeleton key={i} className="h-12 w-full rounded-md" />
             ))}
           </div>
         ) : adminsList.length === 0 ? (
@@ -1086,10 +1086,10 @@ function ReviewersTab({ activeTab }: { activeTab: string }) {
       </CardHeader>
       <CardContent>
         {reviewersLoading || reviewersFetching || allReviewers === undefined ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-              <Skeleton key={i} className="h-14 w-full rounded-md" />
+              <Skeleton key={i} className="h-12 w-full rounded-md" />
             ))}
           </div>
         ) : reviewers.length === 0 ? (
@@ -1590,10 +1590,10 @@ function AssignmentsTab({ activeTab }: { activeTab: string }) {
       </CardHeader>
       <CardContent>
         {reviewersLoading || reviewersFetching || allReviewers === undefined ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton list
-              <Skeleton key={i} className="h-14 w-full rounded-md" />
+              <Skeleton key={i} className="h-12 w-full rounded-md" />
             ))}
           </div>
         ) : reviewersWithAssignments.length === 0 ? (
